@@ -6,9 +6,9 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     
     bio = models.TextField()
-    gender = models.CharField(max_length=7, blank=False)
-    country = models.CharField(max_length=30, blank=False)
-    phone_no = models.IntegerField(blank=False)
+    gender = models.CharField(max_length=7, blank=True)
+    country = models.CharField(max_length=30, blank=True)
+    phone_no = models.IntegerField(blank=True)
     date_updated = models.DateTimeField(auto_now=True)
 
 
