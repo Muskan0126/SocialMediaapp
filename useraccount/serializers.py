@@ -19,15 +19,13 @@ class SignupSerializer(serializers.ModelSerializer):
             ]
 
     def validate_username(self, value):
-        
         if User.objects.filter(username__iexact=value).exists():
             raise serializers.ValidationError("Username already exists.")
         return value
 
     def validate_email(self, value):
-
-        if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("Email already exists.")
+        if not value or User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("Either Email not provided or Email already exists")
 
         return value
 

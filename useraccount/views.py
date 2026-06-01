@@ -7,7 +7,16 @@ from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .serializers import SignupSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
+def get_tokens_for_user(user):
+
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        "refresh": str(refresh),
+        "access": str(refresh.access_token),
+    }
 @method_decorator(csrf_exempt, name='dispatch')
 class SignupView(APIView):
     def post(self, request):
@@ -60,12 +69,14 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        login(request, user)
+        tokens = get_tokens_for_user(user)
 
         return Response(
             {
                 "message": "Login successful",
-                "username": user.username
+                "username": user.username,
+                "access": tokens["access"],
+                "refresh": tokens["refresh"]
             },
             status=status.HTTP_200_OK
         )
@@ -76,13 +87,29 @@ class LogoutView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        
-        logout(request)
 
-        return Response(
-            {"message": "Logout successful"},
-            status=status.HTTP_200_OK
-        )
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response(
+                {"error": "Refresh token is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(
+                {"message": "Logout successful"},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception:
+            return Response(
+                {"error": "Invalid token"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 
