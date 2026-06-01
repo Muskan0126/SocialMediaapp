@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from datetime import timedelta, timezone
+from datetime import timedelta
+from django.utils import timezone
 # Create your models here.
 # user model to keep user information
 class User(AbstractUser):

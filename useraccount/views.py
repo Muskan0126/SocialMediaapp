@@ -1,115 +1,344 @@
-from django.contrib.auth import authenticate, login, logout
+import random
 
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from .serializers import SignupSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import render, redirect
+from django.contrib.auth import (
+    authenticate,
+    login,
+    logout,
+    get_user_model
+)
+from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
+from django.contrib import messages
 
-def get_tokens_for_user(user):
+from .forms import (
+    SignupForm,
+    LoginForm,
+    ForgotPasswordForm,
+    ResetPasswordForm
+)
 
-    refresh = RefreshToken.for_user(user)
+from .models import otp
 
-    return {
-        "refresh": str(refresh),
-        "access": str(refresh.access_token),
-    }
-@method_decorator(csrf_exempt, name='dispatch')
-class SignupView(APIView):
-    def post(self, request):
-    
-        serializer = SignupSerializer(data=request.data)
+User = get_user_model()
 
-        if serializer.is_valid():
-            serializer.save()
 
-            return Response(
-                {
-                    "message": "User created successfully"
-                },
-                status=status.HTTP_201_CREATED
+def signup_view(request):
+
+    form = SignupForm()
+
+    if request.method == "POST":
+
+        form = SignupForm(request.POST)
+
+        if form.is_valid():
+
+            username = form.cleaned_data["username"]
+            email = form.cleaned_data["email"]
+            password = form.cleaned_data["password"]
+            phone_no = form.cleaned_data["phone_no"]
+            gender = form.cleaned_data["gender"]
+            if User.objects.filter(username=username).exists():
+
+                messages.error(
+                    request,
+                    "Username already exists."
+                )
+
+                return render(
+                    request,
+                    "useraccount/signup.html",
+                    {"form": form}
+                )
+            if username[0].isdigit() or username[0] in ('@', '/','-','+'):
+                messages.error(request,"Username should start with a character only")
+                return render(
+                    request,
+                    "useraccount/signup.html",
+                    {"form": form}
+                )
+            if password.isdigit() or len(password) < 8 :
+                messages.error(request,"enter password containing char,number and length greater than 8 char ")
+                return render(
+                    request,
+                    "useraccount/signup.html",
+                    {"form": form}
+                )
+            
+            if not phone_no or len(phone_no) != 10:
+                messages.error(request,"Please enter valid phone number of 10 digits")
+                return render(
+                    request,
+                    "useraccount/signup.html",
+                    {"form": form}
+                )
+            if not gender or gender in('M', 'F', 'O'):
+                messages.error(request," Enter Gender. Only 'M', 'F', 'O' allowed ")
+                return render(
+                    request,
+                    "useraccount/signup.html",
+                    {"form": form}
+                )
+
+            if User.objects.filter(email=email).exists():
+
+                messages.error(
+                    request,
+                    "Email already exists."
+                )
+
+                return render(
+                    request,
+                    "useraccount/signup.html",
+                    {"form": form}
+                )
+
+            user = form.save(commit=False)
+
+            user.set_password(
+                form.cleaned_data["password"]
             )
 
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            user.save()
 
-class LoginView(APIView):
-
-    def post(self, request):
-
-        username = request.data.get("username")
-        password = request.data.get("password")
-
-        if not username:
-            return Response(
-                {"error": "Username is required"},
-                status=status.HTTP_400_BAD_REQUEST
+            messages.success(
+                request,
+                "Account created successfully."
             )
 
-        if not password:
-            return Response(
-                {"error": "Password is required"},
-                status=status.HTTP_400_BAD_REQUEST
+            return redirect("login")
+
+    return render(
+        request,
+        "useraccount/signup.html",
+        {"form": form}
+    )
+
+
+def login_view(request):
+
+    form = LoginForm()
+
+    if request.method == "POST":
+
+        form = LoginForm(request.POST)
+
+        if form.is_valid():
+
+            username = form.cleaned_data["username"]
+            password = form.cleaned_data["password"]
+
+            user = authenticate(
+                request,
+                username=username,
+                password=password
             )
 
-        user = authenticate(
-            request,
-            username=username,
-            password=password
-        )
+            if user:
 
-        if user is None:
-            return Response(
-                {"error": "Invalid username or password"},
-                status=status.HTTP_401_UNAUTHORIZED
+                login(request, user)
+
+                return redirect("home")
+
+            messages.error(
+                request,
+                "Invalid username or password."
             )
 
-        tokens = get_tokens_for_user(user)
+    return render(
+        request,
+        "useraccount/login.html",
+        {"form": form}
+    )
 
-        return Response(
-            {
-                "message": "Login successful",
-                "username": user.username,
-                "access": tokens["access"],
-                "refresh": tokens["refresh"]
-            },
-            status=status.HTTP_200_OK
-        )
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LogoutView(APIView):
+def logout_view(request):
 
-    permission_classes = [AllowAny]
+    logout(request)
 
-    def post(self, request):
+    messages.success(
+        request,
+        "Logged out successfully."
+    )
 
-        refresh_token = request.data.get("refresh")
+    return redirect("login")
 
-        if not refresh_token:
-            return Response(
-                {"error": "Refresh token is required"},
-                status=status.HTTP_400_BAD_REQUEST
+
+def forgot_password_view(request):
+
+    form = ForgotPasswordForm()
+
+    if request.method == "POST":
+
+        form = ForgotPasswordForm(request.POST)
+
+        if form.is_valid():
+
+            email = form.cleaned_data["email"]
+
+            try:
+
+                user = User.objects.get(email=email)
+
+            except User.DoesNotExist:
+
+                messages.error(
+                    request,
+                    "No account found with this email."
+                )
+
+                return render(
+                    request,
+                    "useraccount/forgot_password.html",
+                    {"form": form}
+                )
+
+            otp_text = str(
+                random.randint(
+                    100000,
+                    999999
+                )
             )
 
-        try:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            otp.objects.filter(
+                email__email=email
+            ).delete()
 
-            return Response(
-                {"message": "Logout successful"},
-                status=status.HTTP_200_OK
+            try:
+                user_instance = User.objects.get(email=email)
+                otp.objects.create(email=user_instance, otp=otp_text)
+
+            except User.DoesNotExist:
+                messages.error(
+                    request,
+                    "No account found with this email."
+                )
+
+            send_mail(
+                subject="Password Reset OTP",
+                message=f"Your OTP is {otp_text}. Valid for 10 minutes.",
+                from_email=None,
+                recipient_list=[email],
+                fail_silently=False
             )
 
-        except Exception:
-            return Response(
-                {"error": "Invalid token"},
-                status=status.HTTP_400_BAD_REQUEST
+            request.session["reset_email"] = email
+
+            messages.success(
+                request,
+                "OTP sent successfully."
             )
 
+            return redirect("reset_password")
+
+    return render(
+        request,
+        "useraccount/forgot_password.html",
+        {"form": form}
+    )
 
 
+def reset_password_view(request):
+
+    form = ResetPasswordForm()
+
+    if request.method == "POST":
+
+        form = ResetPasswordForm(request.POST)
+
+        if form.is_valid():
+
+            otp_text = form.cleaned_data["otp"]
+
+            new_password = form.cleaned_data[
+                "new_password"
+            ]
+
+            email = request.session.get(
+                "reset_email"
+            )
+
+            if not email:
+
+                messages.error(
+                    request,
+                    "Session expired. Try again."
+                )
+
+                return redirect(
+                    "forgot_password"
+                )
+
+            try:
+
+                otp_record = (
+                    otp.objects.get(
+                        email__email=email,
+                        otp=otp_text
+                    )
+                )
+
+            except otp.DoesNotExist:
+
+                messages.error(
+                    request,
+                    "Invalid OTP."
+                )
+
+                return render(
+                    request,
+                    "useraccount/reset_password.html",
+                    {"form": form}
+                )
+
+            if otp_record.is_expired():
+
+                otp_record.delete()
+
+                messages.error(
+                    request,
+                    "OTP has expired."
+                )
+
+                return redirect(
+                    "forgot_password"
+                )
+
+            user = User.objects.get(
+                email=email
+            )
+
+            user.set_password(
+                new_password
+            )
+
+            user.save()
+
+            otp_record.delete()
+
+            request.session.pop(
+                "reset_email",
+                None
+            )
+
+            messages.success(
+                request,
+                "Password reset successfully."
+            )
+
+            return redirect("login")
+
+    return render(
+        request,
+        "useraccount/reset_password.html",
+        {"form": form}
+    )
+
+
+@login_required
+def home_view(request):
+
+    return render(
+        request,
+        "useraccount/home.html"
+    )

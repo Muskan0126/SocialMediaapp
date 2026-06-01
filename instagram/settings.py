@@ -147,9 +147,13 @@ SIMPLE_JWT = {
 }
 
 #EMAIL CONFIGURATION
+
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'muskan.agrawal@thoughtwin.com'
-EMAIL_HOST_PASWORD = '123456'
+EMAIL_HOST_USER = 'muskan.agrawal@thoughtwin.com'  
+EMAIL_HOST_PASSWORD = 'bvqu lfjs jmiq kxya'  
+DEFAULT_FROM_EMAIL = 'muskan.agrawal@thoughtwin.com'  
+#send_mail('test mail', 'hello', None, ['546agrawalmuskan@gmail.com'], fail_silently = False)

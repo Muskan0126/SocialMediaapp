@@ -59,3 +59,30 @@ class SignupSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "No account found with this email."
+            )
+
+        return value
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+
+    email = serializers.EmailField()
+
+    otp = serializers.CharField(
+        max_length=6
+    )
+
+    new_password = serializers.CharField(
+        min_length=8
+    )
