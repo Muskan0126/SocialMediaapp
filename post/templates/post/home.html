@@ -62,6 +62,66 @@ body {
   object-fit: cover;     
 }
 
+.container{
+width:60%;
+margin:auto;
+margin-top:30px;
+}
+
+.stories{
+display:flex;
+overflow-x:auto;
+gap:20px;
+background:rgb(19, 18, 18);
+padding:15px;
+border:1px solid #0a0a0a;
+margin-bottom:20px;
+}
+
+.story{
+text-align:center;
+color : white
+}
+
+.story img{
+width:70px;
+height:70px;
+border-radius:50%;
+border:3px solid hotpink;
+object-fit:cover;
+}
+
+.post{
+background:rgb(12, 12, 12);
+border:1px solid #0f0f0f;
+margin-bottom:25px;
+}
+
+.post-header{
+padding:15px;
+font-weight:bold;
+color : white;
+font-size: 25px;
+}
+
+.post-image{
+width:800px;
+max-height:400px;
+object-fit:cover; 
+margin-left: auto;   
+margin-right: auto;}
+
+.post-content{
+padding:15px;
+align-content: center;
+}
+
+.post-caption{
+margin-top:10px;
+color : rgb(255, 247, 247)
+}
+
+
 </style>
 </head>
 <body>
@@ -79,62 +139,62 @@ body {
 <div id="main">
     <span style="font-size:30px;color: #c0358b;cursor:pointer" onclick="openNav()">&#9776; Instagram</span>
     
-    <hr>
-    <h2>Stories</h2>
-    
-    {% for story in stories %}
-    
-            <img
-                src="{{ story.image.url }}"
-                width="150"  
-                class = "circle-pic"     
-            >
-            <br>
-            <strong>
-                {{ story.user.username }}
-            </strong>
-    
-    
-    
-    {% empty %}
-    
-        No Stories
-    
-    {% endfor %}
-    
-    <hr>
-    
-    <h2>Posts</h2>
-    
-    {% for post in posts %}
-    
-    
-            <h3> 
-                <img src="{{ post.user.id.profile_photo.url }}" width="80" class="circle-pic"> {{ post.user.username }} 
-            </h3> 
-                        
-                
-    
-            <img
-                src="{{ post.picture.url }}"
-                width="500"
-                height=" 450"
-            >
-    
-            <p>
-                <strong> {{post.user.username}} </strong> {{post.caption }}
-            </p>
-    
-    
-        <hr>
-    
-    {% empty %}
-    
-        No Posts Yet
-    
-    {% endfor %}
-  
-</div>
+    <div class="container">
+
+        <div class="stories">
+        
+        {% for story in stories %}
+        
+        <div class="story">
+        
+        <img src="{{ story.image.url }}">
+        
+        <p>{{ story.user.username }}</p>
+        
+        </div>
+        
+        {% endfor %}
+        
+        </div>
+        
+        {% for post in posts %}
+        
+        <div class="post">
+        
+        <div class="post-header">
+        
+        {{ post.user.username }}
+        
+        </div>
+        
+        <img
+        class="post-image"
+        src="{{ post.picture.url }}"
+        
+        >
+        
+        <div class="post-content">
+        
+        <div>
+        ❤️ 🤍 💬 📤
+        </div>
+        
+        <div class="post-caption">
+        
+        <strong>
+        {{ post.user.username }}
+        </strong>
+        
+        {{ post.caption }}
+        
+        </div>
+        
+        </div>
+        
+        </div>
+        
+        {% endfor %}
+        
 
 <script>
 function openNav() {
