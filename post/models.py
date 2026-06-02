@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from django.db import models
 from django.contrib.auth import get_user_model
 # Create your models here.
@@ -8,16 +10,17 @@ def user_directory_path(instance, filename):
 
 
 class Post(models.Model):
-    id = models.IntegerField(primary_key=True) 
     picture = models.ImageField(upload_to=user_directory_path)
     caption = models.CharField(max_length=10000)
     posted = models.DateField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    likes = models.IntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-posted']
 
     def __str__(self):
-        return str(self.caption)
-
+        return f"{self.user.username} - {self.id}"
 
 class Likes(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -96,6 +99,10 @@ class Follow(models.Model):
         notify = Notification.objects.filter(sender=sender, user=following, notification_types=3)
         notify.delete()
 
+    unique_together = (
+        "follower",
+        "following"
+    )
 class Stream(models.Model):
     following = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='stream_following')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -112,3 +119,37 @@ class Stream(models.Model):
             stream.save()
 
 
+class Story(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="stories"
+    )
+
+    image = models.ImageField(
+        upload_to="stories/"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+
+        if not self.expires_at:
+
+            self.expires_at = (
+                timezone.now()
+                + timedelta(hours=24)
+            )
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.username} Story"
