@@ -6,12 +6,14 @@ from django.shortcuts import (
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
+from django.core.paginator import Paginator
 from .models import (
     Post,
-    Story
+    Story,
+    Follow,
 )
-from .forms import PostForm, StoryForm
+from .forms import EditProfileForm, PostForm, StoryForm
+import pdb
 
 @login_required
 def home_view(request):
@@ -155,4 +157,92 @@ def delete_story_view(request, story_id):
 
     return redirect(
         "home"
+    )
+
+@login_required
+def profile_view(request):
+
+    posts = (
+        Post.objects
+        .filter(user=request.user)
+        .select_related("user")
+    )
+
+    paginator = Paginator(
+        posts,
+        9
+    )
+
+    page_number = request.GET.get(
+        "page"
+    )
+
+    page_obj = paginator.get_page(
+        page_number
+    )
+
+    followers_count = (
+        Follow.objects.filter(
+            following=request.user
+        ).count()
+    )
+
+    following_count = (
+        Follow.objects.filter(
+            follower=request.user
+        ).count()
+    )
+
+    posts_count = posts.count()
+
+    context = {
+
+        "page_obj": page_obj,
+
+        "followers_count":
+            followers_count,
+
+        "following_count":
+            following_count,
+
+        "posts_count":
+            posts_count,
+    }
+
+    return render(
+        request,
+        "post/profile_view.html",
+        context
+    )
+    
+    
+@login_required
+def edit_profile(request):
+   
+    form = EditProfileForm(
+        instance=request.user
+    )
+
+    if request.method == "POST":
+
+        form = EditProfileForm(
+            request.POST,
+            request.FILES,
+            instance=request.user
+        )
+
+        if form.is_valid():
+
+            form.save()
+
+            return redirect(
+                "profile_view"
+            )
+
+    return render(
+        request,
+        "post/edit_profile.html",
+        {
+            "form": form
+        }
     )
