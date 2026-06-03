@@ -17,7 +17,7 @@ from .forms import PostForm, StoryForm
 def home_view(request):
 
     stories = Story.objects.select_related("user").all()
-    posts = Post.objects.select_related("user").exclude(user = request.user)
+    posts = Post.objects.select_related("user").all()
     context = {
         "stories": stories,
         "posts": posts}
