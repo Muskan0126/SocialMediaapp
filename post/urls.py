@@ -1,11 +1,14 @@
 from django.urls import path
 
+from useraccount.views import forgot_password_view
+
 from .views import (
     edit_profile,
     home_view,
     create_post_view,
     create_story_view,my_posts_view,delete_post_view,delete_story_view,
-    profile_view
+    profile_view,
+    
 )
 
 urlpatterns = [
@@ -45,6 +48,4 @@ urlpatterns = [
         "edit-profile",
         edit_profile,
         name = "edit_profile"
-    ),
-
-]
+    )]

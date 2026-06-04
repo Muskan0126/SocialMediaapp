@@ -7,6 +7,8 @@ from django.shortcuts import (
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
+
+from useraccount.forms import ForgotPasswordForm
 from .models import (
     Post,
     Story,
@@ -14,6 +16,9 @@ from .models import (
 )
 from .forms import EditProfileForm, PostForm, StoryForm
 import pdb
+from django.contrib.auth import (
+    authenticate,)
+from django.contrib.auth.hashers import check_password
 
 @login_required
 def home_view(request):
@@ -135,7 +140,7 @@ def delete_post_view(request, post_id):
     )
 
     return redirect(
-        "my_posts"
+        "home"
     )
 
 
@@ -246,3 +251,8 @@ def edit_profile(request):
             "form": form
         }
     )
+
+def forgot_password(request):
+    # You can now instantiate and use the form normally
+    form = ForgotPasswordForm()
+    return render(request, "useraccount/forgot_password.html", {"form": form})

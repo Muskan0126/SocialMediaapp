@@ -23,16 +23,16 @@ class SignupForm(forms.ModelForm):
 
 class LoginForm(forms.Form):
 
-    username = forms.CharField()
+    username = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Enter your user name'}))
 
     password = forms.CharField(
-        widget=forms.PasswordInput()
+        widget=forms.PasswordInput(attrs={'placeholder': 'Enter your password'})
     )
 
 
 class ForgotPasswordForm(forms.Form):
 
-    email = forms.EmailField()
+    email = forms.EmailField(required=True)
 
 
 class ResetPasswordForm(forms.Form):
