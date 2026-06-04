@@ -1,14 +1,315 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Edit Profile</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#000;
+    color:white;
+    font-family:Arial,sans-serif;
+}
+
+.container{
+    width:50%;
+    margin:40px auto;
+    background:#111;
+    border:1px solid #262626;
+    border-radius:12px;
+    padding:30px;
+}
+
+h2{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.profile-preview{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.profile-preview img{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    object-fit:cover;
+    border:3px solid hotpink;
+}
+
+.form-group{
+    margin-bottom:20px;
+}
+
+label{
+    display:block;
+    margin-bottom:8px;
+    font-weight:bold;
+}
+
+input[type="text"],
+textarea{
+    width:100%;
+    padding:12px;
+    background:#1a1a1a;
+    border:1px solid #333;
+    border-radius:8px;
+    color:white;
+    font-size:14px;
+}
+
+input[type="file"]{
+    color:white;
+}
+
+textarea{
+    resize:none;
+    min-height:120px;
+}
+
+.btn-group{
+    display:flex;
+    justify-content:space-between;
+    margin-top:30px;
+}
+
+.save-btn{
+    background:#e1306c;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+
+.back-btn{
+    text-decoration:none;
+    background:#262626;
+    color:white;
+    padding:12px 25px;
+    border-radius:8px;
+}
+
+.back-btn:hover{
+    background:#333;
+}
+
+.help-text{
+    color:#999;
+    font-size:13px;
+    margin-top:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+
 <h2>Edit Profile</h2>
 
-<form method="post"
-      enctype="multipart/form-data">
-                                   
-    {% csrf_token %}
+<div class="profile-preview">
 
-    {{ form.as_p }}
+    {% if request.user.profile_photo %}
 
-    <button type="submit">
-        Update
-    </button>
+        <img
+            src="{{ request.user.profile_photo.url }}"
+            alt="Profile Photo"
+        >
+
+    {% else %}
+
+        <img
+            src="https://via.placeholder.com/120"
+            alt="Profile Photo"
+        >
+
+    {% endif %}
+
+</div>
+
+<form
+    method="POST"
+    enctype="multipart/form-data"
+>
+
+{% csrf_token %}
+
+    {% if form.errors %}
+
+    <div style="
+    background:#3b1212;
+    border:1px solid red;
+    padding:15px;
+    margin-bottom:20px;
+    border-radius:8px;
+    color:white;
+    ">
+
+        <h4>Form Errors</h4>
+
+        {% for field, errors in form.errors.items %}
+
+            <p>
+
+                <strong>{{ field }}</strong>
+
+                {% for error in errors %}
+                    <br>
+                    {{ error }}
+                {% endfor %}
+
+            </p>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+    <div class="form-group">
+
+        <label>
+            Profile Photo
+        </label>
+
+        {{ form.profile_photo }}
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Bio
+        </label>
+
+        {{ form.bio }}
+        {% if form.bio.errors %}
+        <div style="color:#ff4d4d;margin-top:5px;">
+            {{ form.bio.errors }}
+        </div>
+        {% endif %}
+
+        <p class="help-text">
+            Tell people a little about yourself.
+        </p>
+
+    </div>
+
+    <div class="form-group">
+
+        <label>
+            Username
+        </label>
+
+        {{ form.username }}
+        {% if form.username.errors %}
+        <div style="color:#fffc4d;margin-top:5px;">
+            {{ form.username.errors }}
+        </div>
+        {% endif %}
+    </div>
+    <div class="form-group">
+
+        <label>
+            Email Address
+        </label>
+
+        {{ form.email }}
+
+        {% if form.email.errors %}
+        <div style="color:#fffc4d;margin-top:5px;">
+            {{ form.email.errors }}
+        </div>
+        {% endif %}
+    </div>
+    <div class="form-group">
+
+        <label>
+            First Name
+        </label>
+
+        {{ form.first_name }}
+        {% if form.first_name.errors %}
+        <div style="color:#fffc4d;margin-top:5px;">
+            {{ form.first_name.errors }}
+        </div>
+        {% endif %}
+    </div>
+    <div class="form-group">
+
+        <label>
+            Last Name
+        </label>
+
+        {{ form.last_name }}
+       
+        {% if form.last_name.errors %}
+        <div style="color:#fffc4d;margin-top:5px;">
+            {{ form.last_name.errors }}
+        </div>
+        {% endif %}
+    </div>
+    <div class="form-group">
+
+        <label>
+            Gender
+        </label>
+
+        {{ form.gender }}
+        {% if form.gender.errors %}
+        <div style="color:#fffc4d;margin-top:5px;">
+            {{ form.gender.errors }}
+        </div>
+        {% endif %}
+    </div>
+    <div class="form-group">
+
+        <label>
+            Phone Number
+        </label>
+
+        {{ form.phone_no }}
+        {% if form.phone_no.errors %}
+        <div style="color:#fffc4d;margin-top:5px;">
+            {{ form.phone_no.errors }}
+        </div>
+        {% endif %}
+    </div>
+    <div class="btn-group">
+
+        <a
+            href="{% url 'profile_view' %}"
+            class="back-btn"
+        >
+            Back
+        </a>
+
+        <button
+            type="submit"
+            class="save-btn"
+        >
+            Save Changes
+        </button>
+
+    </div>
 
 </form>
+```
+
+</div>
+
+</body>
+</html>

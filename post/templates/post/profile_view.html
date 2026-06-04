@@ -113,13 +113,20 @@ text-decoration:none;
         "> 🏠 </a>
   
 <div class="profile-header">
+  {% if request.user.profile_photo %}
+  <img
+  class="profile-pic"
+  src="{{ request.user.profile_photo.url }}"
 
-<img
-class="profile-pic"
-src="{{ request.user.profile_photo.url }}"
+  >
+  {% else %}
 
->
+        <img
+            src="https://via.placeholder.com/120"
+    
+        >
 
+    {% endif %}
 <div class="profile-info">
 
 <h1>{{ request.user.username }}</h1>
@@ -160,7 +167,11 @@ href="{% url 'edit_profile' %}"
 >
 
 Edit Profile </a>
+<a
+href="{% url 'forgot_password' %}"
+>
 
+reset password </a>
 </div>
 
 </div>

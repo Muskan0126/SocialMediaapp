@@ -1,6 +1,7 @@
 from django import forms
 from .models import Post, Story, User
 import pdb
+from django.contrib.auth.hashers import check_password
 
 class PostForm(forms.ModelForm):
 
@@ -18,7 +19,6 @@ class StoryForm(forms.ModelForm):
 class EditProfileForm(forms.ModelForm):
   
     email = forms.EmailField(required=True)
-    password = forms.CharField(widget=forms.PasswordInput, required=True)
 
     class Meta:
         model = User
@@ -53,12 +53,7 @@ class EditProfileForm(forms.ModelForm):
             raise forms.ValidationError("Email already exists.")
         return email
 
-    def clean_password(self):
-        password = self.cleaned_data.get("password")
-        if password:
-            if password.isdigit() or len(password) < 8:
-                raise forms.ValidationError("Password must contain both characters and numbers, and be over 8 characters long.")
-        return password
+
 
     def clean_phone_no(self):
         phone_no = self.cleaned_data.get("phone_no")
@@ -72,3 +67,67 @@ class EditProfileForm(forms.ModelForm):
         if not gender or gender not in ('M', 'F', 'O'):
             raise forms.ValidationError("Enter Gender. Only 'M', 'F', 'O' allowed.")
         return gender
+    
+
+from django import forms
+
+
+class ResetPassword(forms.Form):
+
+    old_password = forms.CharField(
+        widget=forms.PasswordInput
+    )
+
+    new_password = forms.CharField(
+        widget=forms.PasswordInput
+    )
+
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput
+    )
+
+    def clean_new_password(self):
+        breakpoint()
+        password = self.cleaned_data.get(
+            "new_password"
+        )
+
+        if len(password) < 8:
+
+            raise forms.ValidationError(
+                "Password must be at least 8 characters."
+            )
+
+        if password.isdigit():
+
+            raise forms.ValidationError(
+                "Password cannot contain only numbers."
+            )
+
+        return password
+
+    def clean(self):
+
+        cleaned_data = super().clean()
+
+        new_password = cleaned_data.get(
+            "new_password"
+        )
+
+        confirm_password = cleaned_data.get(
+            "confirm_password"
+        )
+
+        if (
+            new_password
+            and
+            confirm_password
+            and
+            new_password != confirm_password
+        ):
+
+            raise forms.ValidationError(
+                "Passwords do not match."
+            )
+
+        return cleaned_data
