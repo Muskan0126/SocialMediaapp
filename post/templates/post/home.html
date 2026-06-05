@@ -147,52 +147,56 @@ white-space:normal;
     <div class="container">
 
         <div class="stories">
-          
-        {% for story in stories %}
-        
+
+        {# Always show logged-in user first, even if no story #}
+        {% if not stories or stories.0.user != request.user %}
         <div class="story">
-          <div class = 'profile img'>
+          <div class="profile img">
             {% if request.user.profile_photo %}
-            
-              
+            <img src="{{ request.user.profile_photo.url }}" alt="Profile Photo" style="opacity:0.5;">
+            {% else %}
+            <img src="https://via.placeholder.com/70" alt="Profile Photo" style="opacity:0.5;">
+            {% endif %}
+          </div>
+          <p>{{ request.user.username }}</p>
+        </div>
+        {% endif %}
+
+        {% for story in stories %}
+        <div class="story">
+          <div class="profile img">
+            {% if story.user.profile_photo %}
             <img
-                src="{{ request.user.profile_photo.url }}"
+                src="{{ story.user.profile_photo.url }}"
                 alt="Profile Photo"
-                onclick= "document.getElementById('imagePopup').showModal()" style="cursor: pointer;"
+                onclick="document.getElementById('storyPopup_{{ story.id }}').showModal()"
+                style="cursor:pointer;"
             >
             {% else %}
-  
             <img
-                src="https://via.placeholder.com/120"
+                src="https://via.placeholder.com/70"
                 alt="Profile Photo"
+                onclick="document.getElementById('storyPopup_{{ story.id }}').showModal()"
+                style="cursor:pointer;"
             >
             {% endif %}
-
-            
           </div>
-          <dialog id="imagePopup" style="border: none; border-radius: 1px; padding: 20px;">
-            <img src="{{ story.image.url }}" alt="Story Image" style="max-width: 50%; height: auto;">
+
+          <dialog id="storyPopup_{{ story.id }}" style="border:none; border-radius:8px; padding:20px; background:#111; color:white;">
+            <img src="{{ story.image.url }}" alt="Story Image" style="max-width:400px; max-height:600px; height:auto; display:block;">
             <br>
-            <button onclick="document.getElementById('imagePopup').close()" style="margin-top: 10px;">Close</button>
+            <button onclick="document.getElementById('storyPopup_{{ story.id }}').close()" style="margin-top:10px;">Close</button>
             {% if story.user == request.user %}
-            <a href="{% url 'delete_story' story.id %}" class="btn" style="margin-top: 10px; 
-            display:block;
-            margin-top:5px;
-            font-size:12px;
-            color:red;
-            text-decoration:none;
-            " onclick="return confirm('Are you sure?');">
-              Delete
-          </a>
-          {% endif %}
-        </dialog>
-        
-        <p>{{ story.user.username }}</p>
-        
+            <a href="{% url 'delete_story' story.id %}"
+               style="display:block; margin-top:5px; font-size:12px; color:red; text-decoration:none;"
+               onclick="return confirm('Are you sure?');">Delete</a>
+            {% endif %}
+          </dialog>
+
+          <p>{{ story.user.username }}</p>
         </div>
-        
         {% endfor %}
-        
+
         </div>
         
         {% for post in posts %}

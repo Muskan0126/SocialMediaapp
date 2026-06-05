@@ -17,13 +17,22 @@ from .models import (
 from .forms import EditProfileForm, PostForm, StoryForm
 import pdb
 from django.contrib.auth import (
-    authenticate,)
+    authenticate,
+    logout,
+)
 from django.contrib.auth.hashers import check_password
 
 @login_required
 def home_view(request):
 
-    stories = Story.objects.select_related("user").all()
+    from django.db.models import Case, When, IntegerField
+    stories = Story.objects.select_related("user").annotate(
+        is_me=Case(
+            When(user=request.user, then=0),
+            default=1,
+            output_field=IntegerField()
+        )
+    ).order_by("is_me", "-created_at")
     posts = Post.objects.select_related("user").all()
     context = {
         "stories": stories,
@@ -252,7 +261,12 @@ def edit_profile(request):
         }
     )
 
-def forgot_password(request):
-    # You can now instantiate and use the form normally
-    form = ForgotPasswordForm()
-    return render(request, "useraccount/forgot_password.html", {"form": form})
+@login_required
+def delete_account_view(request):
+    if request.method == "POST":
+        user = request.user
+        logout(request)
+        user.delete()
+        messages.success(request, "Your account has been deleted.")
+        return redirect("signup")
+    return redirect("profile_view")

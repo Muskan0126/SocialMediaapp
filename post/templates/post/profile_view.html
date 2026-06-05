@@ -55,11 +55,13 @@ margin-top:15px;
 }
 
 .edit-btn{
-padding:10px 20px;
+
+padding:10px 20px 10px;
 background:#262626;
 color:white;
 text-decoration:none;
 border-radius:8px;
+gap : 40px;
 }
 
 .posts-grid{
@@ -165,13 +167,20 @@ class="edit-btn"
 href="{% url 'edit_profile' %}"
 
 >
-
 Edit Profile </a>
-<a
+
+<a 
+class="edit-btn"
 href="{% url 'forgot_password' %}"
 >
-
 reset password </a>
+
+<form method="post" action="{% url 'delete_account' %}" style="display:inline;" onsubmit="return confirm('Are you sure? This will permanently delete your account, posts, and stories.');">
+    {% csrf_token %}
+    <button type="submit" style="background:none; border:none; color:red; cursor:pointer; font-size:16px; padding:0; margin-left:10px;">
+        Delete Account
+    </button>
+</form>
 </div>
 
 </div>
