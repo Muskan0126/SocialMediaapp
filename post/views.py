@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import (
     render,
     redirect,
@@ -10,6 +11,7 @@ from django.core.paginator import Paginator
 
 from useraccount.forms import ForgotPasswordForm
 from .models import (
+    Likes,
     Post,
     Story,
     Follow,
@@ -20,12 +22,11 @@ from django.contrib.auth import (
     authenticate,
     logout,
 )
-from django.contrib.auth.hashers import check_password
+from django.db.models import Case, When, IntegerField
 
 @login_required
 def home_view(request):
 
-    from django.db.models import Case, When, IntegerField
     stories = Story.objects.select_related("user").annotate(
         is_me=Case(
             When(user=request.user, then=0),
@@ -34,9 +35,11 @@ def home_view(request):
         )
     ).order_by("is_me", "-created_at")
     posts = Post.objects.select_related("user").all()
+    liked_posts = Likes.objects.filter(user=request.user).values_list("post_id",flat=True)
     context = {
         "stories": stories,
-        "posts": posts}
+        "posts": posts,
+        "likes" : liked_posts}
     return render(
         request,
         "post/home.html",
@@ -270,3 +273,39 @@ def delete_account_view(request):
         messages.success(request, "Your account has been deleted.")
         return redirect("signup")
     return redirect("profile_view")
+
+@login_required
+def like_post(request, post_id):
+
+    post = Post.objects.get(
+        id=post_id
+    )
+
+    like = Likes.objects.filter(
+        user=request.user,
+        post=post
+    )
+
+    if like.exists():
+
+        like.delete()
+
+        liked = False
+
+    else:
+
+        Likes.objects.create(
+            user=request.user,
+            post=post
+        )
+
+        liked = True
+
+    return JsonResponse({
+
+        "liked": liked,
+
+        "likes_count":
+        post.post_likes.count()
+
+    })

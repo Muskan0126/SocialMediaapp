@@ -187,10 +187,13 @@ white-space:normal;
             <br>
             <button onclick="document.getElementById('storyPopup_{{ story.id }}').close()" style="margin-top:10px;">Close</button>
             {% if story.user == request.user %}
-            <a href="{% url 'delete_story' story.id %}"
-               style="display:block; margin-top:5px; font-size:12px; color:red; text-decoration:none;"
-               onclick="return confirm('Are you sure?');">Delete</a>
-            {% endif %}
+            <a href="{% url 'delete_story' story.id %}" 
+              class="d-block mt-2 small text-danger text-decoration-none" 
+              onclick="return confirm('Are you sure?');">
+              Delete
+            </a>
+        {% endif %}
+
           </dialog>
 
           <p>{{ story.user.username }}</p>
@@ -208,7 +211,7 @@ white-space:normal;
           
         
         
-        
+
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span>{{ post.user.username }}</span>
           {% if post.user == request.user %}
@@ -233,8 +236,31 @@ white-space:normal;
         
         <div class="post-content">
         
-        <div>
-        ❤️ 🤍 💬 📤
+          <div class="post-actions">
+
+            <span
+                class="like-btn"
+                data-post-id="{{ post.id }}"
+                style="
+                cursor:pointer;
+                font-size:30px;
+                "
+            >
+        
+            {% if user.id in liked %}
+                ❤️
+            {% else %}
+                🤍
+            {% endif %}
+        
+            </span>
+        
+            <span id="likes-count-{{ post.id }}">
+                {{ post.post_likes.count }}
+            </span>
+        
+            Likes
+        
         </div>
         
         <div class="post-caption">
@@ -253,8 +279,61 @@ white-space:normal;
         
         {% endfor %}
         
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 <script>
+$(document).ready(function(){
+
+$(".like-btn").click(function(){
+
+    var button = $(this);
+
+    var post_id =
+        button.data("post-id");
+
+    $.ajax({
+
+        url:
+        "/post/like/" +
+        post_id +
+        "/",
+
+        type:"POST",
+
+        headers:{
+
+            "X-CSRFToken":
+            "{{ csrf_token }}"
+
+        },
+
+        success:function(response){
+
+            if(response.liked){
+
+                button.html("❤️");
+
+            }
+
+            else{
+
+                button.html("🤍");
+
+            }
+
+            $("#likes-count-" + post_id)
+            .text(
+                response.likes_count
+            );
+
+        }
+
+    });
+
+});
+
+});
+
 function openNav() {
   document.getElementById("mySidenav").style.width = "250px";
   document.getElementById("main").style.marginLeft = "250px";
