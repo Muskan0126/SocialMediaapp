@@ -23,7 +23,9 @@ from django.contrib.auth import (
     logout,
 )
 from django.db.models import Case, When, IntegerField
-
+from django.contrib.auth import get_user_model
+    
+User = get_user_model()
 @login_required
 def home_view(request):
 
@@ -35,11 +37,14 @@ def home_view(request):
         )
     ).order_by("is_me", "-created_at")
     posts = Post.objects.select_related("user").all()
-    liked_posts = Likes.objects.filter(user=request.user).values_list("post_id",flat=True)
+    liked_posts = Likes.objects.filter(user=request.user).values_list("post_id", flat=True)
+    following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
     context = {
         "stories": stories,
         "posts": posts,
-        "likes" : liked_posts}
+        "likes": liked_posts,
+        "following_ids": following_ids,
+    }
     return render(
         request,
         "post/home.html",
@@ -308,4 +313,26 @@ def like_post(request, post_id):
         "likes_count":
         post.post_likes.count()
 
+    })
+
+@login_required
+def follow_user(request, user_id):
+    
+    target = get_object_or_404(User, id=user_id)
+
+    if target == request.user:
+        return JsonResponse({"error": "Cannot follow yourself"}, status=400)
+
+    follow = Follow.objects.filter(follower=request.user, following=target)
+
+    if follow.exists():
+        follow.delete()
+        following = False
+    else:
+        Follow.objects.create(follower=request.user, following=target)
+        following = True
+
+    return JsonResponse({
+        "following": following,
+        "followers_count": Follow.objects.filter(following=target).count(),
     })
