@@ -6,9 +6,11 @@ from .views import (
     edit_profile,
     home_view,
     create_post_view,
-    create_story_view, my_posts_view, delete_post_view, delete_story_view,
+    create_story_view,
+    like_post, my_posts_view, delete_post_view, delete_story_view,
     profile_view,
     delete_account_view,
+    follow_user,
 )
 
 urlpatterns = [
@@ -53,5 +55,15 @@ urlpatterns = [
         "delete-account/",
         delete_account_view,
         name="delete_account"
+    ),
+    path(
+        "like/<int:post_id>/",
+        like_post,
+        name="like_post"
+    ),
+    path(
+        "follow/<int:user_id>/",
+        follow_user,
+        name="follow_user"
     ),
 ]

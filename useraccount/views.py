@@ -37,7 +37,7 @@ def signup_view(request):
             email = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
             phone_no = form.cleaned_data["phone_no"]
-            gender = form.cleaned_data["gender"]
+            gender = form.cleaned_data["gender"].upper()
             if User.objects.filter(username=username).exists():
 
                 messages.error(
@@ -72,7 +72,7 @@ def signup_view(request):
                     "useraccount/signup.html",
                     {"form": form}
                 )
-            if not gender or gender in('M', 'F', 'O'):
+            if not gender or gender not in('M', 'F', 'O'):
                 messages.error(request," Enter Gender. Only 'M', 'F', 'O' allowed ")
                 return render(
                     request,
