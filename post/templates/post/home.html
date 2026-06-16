@@ -90,7 +90,13 @@ border-radius:50%;
 border:3px solid hotpink;
 object-fit:cover;
 }
-
+.pro img{
+width:30px;
+height:30px;
+border-radius:50%;
+border:3px solid hotpink;
+object-fit:cover;
+}
 .post{
 background:rgb(12, 12, 12);
 border:1px solid #0f0f0f;
@@ -148,14 +154,13 @@ white-space:normal;
 
         <div class="stories">
 
-        {# Always show logged-in user first, even if no story #}
         {% if not stories or stories.0.user != request.user %}
         <div class="story">
           <div class="profile img">
             {% if request.user.profile_photo %}
-            <img src="{{ request.user.profile_photo.url }}" alt="Profile Photo" style="opacity:0.5;">
+            <img src="{{ request.user.profile_photo.url }}" style="opacity:0.5;">
             {% else %}
-            <img src="https://via.placeholder.com/70" alt="Profile Photo" style="opacity:0.5;">
+            <img src="https://placehold.co/600x400"  style="opacity:0.5;">
             {% endif %}
           </div>
           <p>{{ request.user.username }}</p>
@@ -168,14 +173,14 @@ white-space:normal;
             {% if story.user.profile_photo %}
             <img
                 src="{{ story.user.profile_photo.url }}"
-                alt="Profile Photo"
+                
                 onclick="document.getElementById('storyPopup_{{ story.id }}').showModal()"
                 style="cursor:pointer;"
             >
             {% else %}
             <img
                 src="https://via.placeholder.com/70"
-                alt="Profile Photo"
+                
                 onclick="document.getElementById('storyPopup_{{ story.id }}').showModal()"
                 style="cursor:pointer;"
             >
@@ -211,17 +216,27 @@ white-space:normal;
           
         
         
-
+        
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <div class="pro img">
+            <div style="display: flex; align-items: center; width: 100%;"></div>
+            {% if request.user.profile_photo %}
+            <img src="{{ post.user.profile_photo.url }}"  style="opacity:1;">
+            {% else %}
+            <img src="https://placehold.co/600x400" style="opacity:1; background-color: #f1f1f1;">
+            {% endif %}
+          
           <span>{{ post.user.username }}</span>
+        </div>
           <div style="display:flex; gap:10px; align-items:center;">
             {% if post.user != request.user %}
+            
             <button
                 class="follow-btn"
                 data-user-id="{{ post.user.id }}"
                 style="
-                  background: {% if post.user.id in following_ids %}transparent{% else %}#e1306c{% endif %};
-                  color: {% if post.user.id in following_ids %}#aaa{% else %}white{% endif %};
+                  background: {% if post.user.id in following_ids %}#e1306c{% else %}#e1306c{% endif %};
+                  color: {% if post.user.id in following_ids %}black{% else %}white{% endif %};
                   border: 1px solid {% if post.user.id in following_ids %}#aaa{% else %}#e1306c{% endif %};
                   padding: 4px 14px;
                   border-radius: 6px;
@@ -278,7 +293,7 @@ white-space:normal;
             </span>
         
             Likes
-        
+         <span> </span>
         </div>
         
         <div class="post-caption">
@@ -289,10 +304,10 @@ white-space:normal;
         
         {{ post.caption }}
         
+      </div>
+      
         </div>
-        
-        </div>
-        
+      
         </div>
         
         {% endfor %}
@@ -362,8 +377,8 @@ $(".follow-btn").click(function(){
             if(response.following){
                 btn.text("Unfollow");
                 btn.css({
-                    "background": "transparent",
-                    "color": "#aaa",
+                    "background": "#e1306c",
+                    "color": "black",
                     "border": "1px solid #aaa"
                 });
             } else {
