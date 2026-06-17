@@ -15,6 +15,8 @@ from .models import (
     Post,
     Story,
     Follow,
+    Notification,
+    Comment,
 )
 from .forms import EditProfileForm, PostForm, StoryForm
 import pdb
@@ -270,6 +272,15 @@ def edit_profile(request):
     )
 
 @login_required
+def notifications_view(request):
+    notifications = Notification.objects.filter(
+        receiver=request.user
+    ).select_related("sender")
+    notifications.update(is_read=True)
+    return render(request, "post/notifications.html", {"notifications": notifications})
+
+
+@login_required
 def delete_account_view(request):
     if request.method == "POST":
         user = request.user
@@ -314,6 +325,23 @@ def like_post(request, post_id):
         post.post_likes.count()
 
     })
+
+@login_required
+def add_comment(request, post_id):
+    if request.method == "POST":
+        post = get_object_or_404(Post, id=post_id)
+        text = request.POST.get("comment", "").strip()
+        if text:
+            import uuid
+            Comment.objects.create(
+                id=str(uuid.uuid4())[:25],
+                author=request.user,
+                item=post,
+                comment=text,
+            )
+            return JsonResponse({"author": request.user.username, "comment": text})
+    return JsonResponse({"error": "invalid"}, status=400)
+
 
 @login_required
 def follow_user(request, user_id):

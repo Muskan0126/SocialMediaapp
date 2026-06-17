@@ -11,6 +11,8 @@ from .views import (
     profile_view,
     delete_account_view,
     follow_user,
+    notifications_view,
+    add_comment,
 )
 
 urlpatterns = [
@@ -65,5 +67,15 @@ urlpatterns = [
         "follow/<int:user_id>/",
         follow_user,
         name="follow_user"
+    ),
+    path(
+        "notifications/",
+        notifications_view,
+        name="notifications"
+    ),
+    path(
+        "comment/<int:post_id>/",
+        add_comment,
+        name="add_comment"
     ),
 ]

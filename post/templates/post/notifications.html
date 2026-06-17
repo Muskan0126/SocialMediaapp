@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Notifications</title>
+<style>
+body { background: #111; color: white; font-family: Arial, sans-serif; }
+.container { width: 50%; margin: 40px auto; }
+.item { padding: 14px; border-bottom: 1px solid #222; font-size: 15px; }
+.empty { color: #555; margin-top: 40px; }
+a { color: #aaa; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+    <p><a href="{% url 'home' %}">← Home</a></p>
+    <h2>Notifications</h2>
+
+    {% for n in notifications %}
+        <div class="item">{{ n.notification_text }}</div>
+    {% empty %}
+        <p class="empty">No notifications yet.</p>
+    {% endfor %}
+</div>
+</body>
+</html>

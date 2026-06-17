@@ -140,7 +140,7 @@ white-space:normal;
 <div id="mySidenav" class="sidenav">
   <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
   <a href="{% url 'home' %}"> Home</a>
-  <a href="#">&#8506 Message</a>
+  <a href="{% url 'notifications' %}">&#128276; Notifications</a>
   <a href="{% url 'create_post' %}"> &#128934 Add Post</a>
   <a href="{% url 'create_story' %}"> &#128934 Add Story</a>
   <a href="{% url 'logout' %}">&#10149 Signout</a>
@@ -293,7 +293,35 @@ white-space:normal;
             </span>
         
             Likes
-         <span> </span>
+            &nbsp;
+            <span
+                style="cursor:pointer; font-size:26px;"
+                onclick="
+                    var box = document.getElementById('comment-box-{{ post.id }}');
+                    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+                "
+            >💬</span>
+        </div>
+
+        <div id="comment-box-{{ post.id }}" style="display:none; margin-top:10px;">
+            <div id="comments-list-{{ post.id }}" style="margin-bottom:8px;">
+                {% for c in post.comment_set.all %}
+                <div style="color:white; font-size:14px; padding:4px 0; border-bottom:1px solid #222;">
+                    <strong>{{ c.author.username }}</strong> {{ c.comment }}
+                </div>
+                {% endfor %}
+            </div>
+            <form class="comment-form" data-post-id="{{ post.id }}" style="display:flex; gap:8px;">
+                {% csrf_token %}
+                <input
+                    type="text"
+                    name="comment"
+                    placeholder="Add a comment..."
+                    autocomplete="off"
+                    style="flex:1; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:white;"
+                >
+                <button type="submit" style="padding:8px 14px; background:#e1306c; color:white; border:none; border-radius:6px; cursor:pointer;">Post</button>
+            </form>
         </div>
         
         <div class="post-caption">
@@ -374,21 +402,46 @@ $(".follow-btn").click(function(){
         type: "POST",
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
         success: function(response){
+            var allBtns = $(".follow-btn[data-user-id='" + user_id + "']");
             if(response.following){
-                btn.text("Unfollow");
-                btn.css({
-                    "background": "#e1306c",
-                    "color": "black",
+                allBtns.text("Unfollow");
+                allBtns.css({
+                    "background": "transparent",
+                    "color": "#aaa",
                     "border": "1px solid #aaa"
                 });
             } else {
-                btn.text("Follow");
-                btn.css({
+                allBtns.text("Follow");
+                allBtns.css({
                     "background": "#e1306c",
                     "color": "white",
                     "border": "1px solid #e1306c"
                 });
             }
+        }
+    });
+});
+
+$(document).on("submit", ".comment-form", function(e){
+    e.preventDefault();
+    var form = $(this);
+    var post_id = form.data("post-id");
+    var input = form.find("input[name='comment']");
+    var text = input.val().trim();
+    if (!text) return;
+
+    $.ajax({
+        url: "/post/comment/" + post_id + "/",
+        type: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        data: { comment: text },
+        success: function(response){
+            $("#comments-list-" + post_id).append(
+                '<div style="color:white;font-size:14px;padding:4px 0;border-bottom:1px solid #222;">' +
+                '<strong>' + response.author + '</strong> ' + response.comment +
+                '</div>'
+            );
+            input.val("");
         }
     });
 });
