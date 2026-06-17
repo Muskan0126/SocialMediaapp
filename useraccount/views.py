@@ -37,7 +37,7 @@ def signup_view(request):
             email = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
             phone_no = form.cleaned_data["phone_no"]
-            gender = form.cleaned_data["gender"].upper()
+            gender = form.cleaned_data["gender"]
             if User.objects.filter(username=username).exists():
 
                 messages.error(

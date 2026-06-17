@@ -132,7 +132,16 @@ word-break:break-word;
 white-space:normal;
 }
 
-
+.comment{
+margin-top:10px;
+color:white;
+line-height:1.6;
+font-size:15px;
+inline-size: 600px;
+overflow-wrap: break-word;
+word-break:break-word;
+white-space:normal;
+}
 </style>
 </head>
 <body>
@@ -140,7 +149,7 @@ white-space:normal;
 <div id="mySidenav" class="sidenav">
   <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
   <a href="{% url 'home' %}"> Home</a>
-  <a href="{% url 'notifications' %}">&#128276; Notifications</a>
+  <a href="{% url 'notifications' %}">&#8506 Message</a>
   <a href="{% url 'create_post' %}"> &#128934 Add Post</a>
   <a href="{% url 'create_story' %}"> &#128934 Add Story</a>
   <a href="{% url 'logout' %}">&#10149 Signout</a>
@@ -225,8 +234,11 @@ white-space:normal;
             {% else %}
             <img src="https://placehold.co/600x400" style="opacity:1; background-color: #f1f1f1;">
             {% endif %}
-          
+          {% if post.user == request.user %}
+          <span><a href="{% url 'profile_view' %}">{{ post.user.username }}</a></span>
+          {% else %}
           <span>{{ post.user.username }}</span>
+          {% endif %}
         </div>
           <div style="display:flex; gap:10px; align-items:center;">
             {% if post.user != request.user %}
@@ -294,23 +306,32 @@ white-space:normal;
         
             Likes
             &nbsp;
-            <span
-                style="cursor:pointer; font-size:26px;"
-                onclick="
-                    var box = document.getElementById('comment-box-{{ post.id }}');
-                    box.style.display = box.style.display === 'none' ? 'block' : 'none';
-                "
-            >💬</span>
-        </div>
+            
 
-        <div id="comment-box-{{ post.id }}" style="display:none; margin-top:10px;">
-            <div id="comments-list-{{ post.id }}" style="margin-bottom:8px;">
+<div style="position: relative; display: inline-block;">
+    
+  
+  <button onclick="document.getElementById('comment-box-{{ post.id }}').style.display = 'block'" 
+  style="height: 45px; width: 45px; font-size: 30px; background : rgb(15, 15, 15); border: #0f0f0f; color : white">&#8506</button>
+  <span id="likes-count-{{ post.id }}">
+    {{ post.comment_set.count }}
+</span>
+  
+      
+
+
+
+        
+<div class = "comment">
+        <div id="comment-box-{{ post.id }}" style="display: none; position: absolute; top: 40px; left: 0; z-index: 100; background: white; border: 1px solid #ccc; padding: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height:auto ; width: 700px;">
+          <div id="comments-list-{{ post.id }}" style="margin-bottom:8px;">
                 {% for c in post.comment_set.all %}
-                <div style="color:white; font-size:14px; padding:4px 0; border-bottom:1px solid #222;">
-                    <strong>{{ c.author.username }}</strong> {{ c.comment }}
+                <div style= "background : black;color:white; font-size:14px; padding:4px 0; border-bottom:1px solid #222;">
+                    <strong>{{ c.author.username }} : </strong> {{ c.comment }}
                 </div>
                 {% endfor %}
             </div>
+          </class>
             <form class="comment-form" data-post-id="{{ post.id }}" style="display:flex; gap:8px;">
                 {% csrf_token %}
                 <input
@@ -320,9 +341,12 @@ white-space:normal;
                     autocomplete="off"
                     style="flex:1; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:white;"
                 >
-                <button type="submit" style="padding:8px 14px; background:#e1306c; color:white; border:none; border-radius:6px; cursor:pointer;">Post</button>
+                <button type="submit" style="padding:18px 18px; background:#e1306c; color:white; border:none; border-radius:6px; cursor:pointer;">Post</button>
             </form>
+            <button onclick="this.parentElement.style.display = 'none'">Close</button>
+  </div>
         </div>
+          </div>
         
         <div class="post-caption">
         
@@ -437,8 +461,8 @@ $(document).on("submit", ".comment-form", function(e){
         data: { comment: text },
         success: function(response){
             $("#comments-list-" + post_id).append(
-                '<div style="color:white;font-size:14px;padding:4px 0;border-bottom:1px solid #222;">' +
-                '<strong>' + response.author + '</strong> ' + response.comment +
+                '<div style="background : black;color:white;font-size:14px;padding:4px 0;border-bottom:1px solid #222;">' +
+                '<strong>' + response.author  +  ':' + '</strong> '  + response.comment +
                 '</div>'
             );
             input.val("");
