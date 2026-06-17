@@ -142,6 +142,48 @@ overflow-wrap: break-word;
 word-break:break-word;
 white-space:normal;
 }
+.card {
+    height: auto;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    background-color: rgb(222, 222, 222);
+    margin-top: 10px;
+}
+.text {
+    display: block;
+    font-size: 20px;
+    font-weight: bold;
+}
+.reply {
+    color: rgb(84, 84, 233);
+    cursor: pointer;
+    margin-top: 5px;
+}
+.comment-details {
+    margin-left: 4rem;
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+.input {
+    height: 30px;
+    border-radius: 10px;
+}
+.btn {
+    color: white;
+    margin-left: 5px;
+    background-color: rgb(135, 135, 235);
+    border: 0px;
+    border-radius: 10px;
+    height: 30px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+.all-comment:not(:first-child) {
+    margin-left: 4rem;
+}
+
 </style>
 </head>
 <body>
@@ -268,9 +310,7 @@ white-space:normal;
             {% endif %}
           </div>
         </div>
-        
-       
-        
+ 
         </div>
         
         <img
@@ -316,18 +356,26 @@ white-space:normal;
   <span id="likes-count-{{ post.id }}">
     {{ post.comment_set.count }}
 </span>
-  
-      
-
-
-
-        
+    
 <div class = "comment">
         <div id="comment-box-{{ post.id }}" style="display: none; position: absolute; top: 40px; left: 0; z-index: 100; background: white; border: 1px solid #ccc; padding: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height:auto ; width: 700px;">
           <div id="comments-list-{{ post.id }}" style="margin-bottom:8px;">
                 {% for c in post.comment_set.all %}
                 <div style= "background : black;color:white; font-size:14px; padding:4px 0; border-bottom:1px solid #222;">
-                    <strong>{{ c.author.username }} : </strong> {{ c.comment }}
+                    <strong>{{ c.author.username }} : </strong> {{ c.comment }}  &#8618
+                    <div class="container">
+                      <div id="comment-container" 
+                           class="comment-container">
+                          <div class="all-comment">
+                              <div class="card">
+                    <span id="reply" 
+                          class="reply">
+                          Add Reply
+                      </span>
+                    </div>
+                  </div>
+              </div>
+          </div>
                 </div>
                 {% endfor %}
             </div>
@@ -416,7 +464,59 @@ $(".like-btn").click(function(){
     });
 
 });
+let commentContainer = 
+    document.getElementById("comment-container");
 
+function createInputBox() {
+    let div = document.createElement("div");
+
+    div.setAttribute("class", "comment-details");
+
+    div.innerHTML += `<input type="text"
+                             placeholder="add text here"
+                             class="input" />
+                      <button class="btn submit">
+                           Submit
+                      </button>`;
+    return div;
+}
+function addReply(text) {
+    let div = document.createElement("div");
+
+    div.setAttribute("class", "all-comment");
+    
+    div.innerHTML += `<div class="card">
+                      <span class="text">
+                      ${text}
+                      </span>
+                      <span id="reply" class="reply">
+                      Add Reply
+                      </span></div>`;
+    return div;
+}
+
+commentContainer.addEventListener("click", function (e) {
+    let replyClicked =
+        e.target.classList.contains("reply");
+    let submitClicked =
+        e.target.classList.contains("submit");
+    let closestCard =
+        e.target.closest(".all-comment");
+
+    if (replyClicked) {
+        closestCard.appendChild(createInputBox());
+    }
+
+    if (submitClicked) {
+        const commentDetails =
+            e.target.closest(".comment-details");
+        if (commentDetails.children[0].value) {
+            closestCard.appendChild(
+                addReply(commentDetails.children[0].value));
+            commentDetails.remove();
+        }
+    }
+}); 
 $(".follow-btn").click(function(){
     var btn = $(this);
     var user_id = btn.data("user-id");
@@ -462,7 +562,7 @@ $(document).on("submit", ".comment-form", function(e){
         success: function(response){
             $("#comments-list-" + post_id).append(
                 '<div style="background : black;color:white;font-size:14px;padding:4px 0;border-bottom:1px solid #222;">' +
-                '<strong>' + response.author  +  ':' + '</strong> '  + response.comment +
+                '<strong>' + response.author  +  ':' + '</strong> '  + response.comment + '&#8618' +
                 '</div>'
             );
             input.val("");
