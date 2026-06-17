@@ -354,47 +354,80 @@ white-space:normal;
   <button onclick="document.getElementById('comment-box-{{ post.id }}').style.display = 'block'" 
   style="height: 45px; width: 45px; font-size: 30px; background : rgb(15, 15, 15); border: #0f0f0f; color : white">&#8506</button>
   <span id="likes-count-{{ post.id }}">
-    {{ post.comment_set.count }}
+    {{ post.comments.count }}
 </span>
     
-<div class = "comment">
+<div class = "comment"
+    data-comment-id="{{ c.id }}">
         <div id="comment-box-{{ post.id }}" style="display: none; position: absolute; top: 40px; left: 0; z-index: 100; background: white; border: 1px solid #ccc; padding: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height:auto ; width: 700px;">
           <div id="comments-list-{{ post.id }}" style="margin-bottom:8px;">
-                {% for c in post.comment_set.all %}
-                <div style= "background : black;color:white; font-size:14px; padding:4px 0; border-bottom:1px solid #222;">
-                    <strong>{{ c.author.username }} : </strong> {{ c.comment }}  &#8618
-                    <div class="container">
-                      <div id="comment-container" 
-                           class="comment-container">
-                          <div class="all-comment">
-                              <div class="card">
-                    <span id="reply" 
-                          class="reply">
-                          Add Reply
-                      </span>
-                    </div>
-                  </div>
-              </div>
-          </div>
-                </div>
-                {% endfor %}
-            </div>
-          </class>
-            <form class="comment-form" data-post-id="{{ post.id }}" style="display:flex; gap:8px;">
-                {% csrf_token %}
-                <input
-                    type="text"
-                    name="comment"
-                    placeholder="Add a comment..."
-                    autocomplete="off"
-                    style="flex:1; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:white;"
+
+    {% for c in post.comments.all %}
+
+        {% if not c.parent %}
+
+        <div
+            class="comment-item"
+            data-comment-id="{{ c.id }}"
+            style="
+                background:black;
+                color:white;
+                padding:8px;
+                border-bottom:1px solid #222;
+            "
+        >
+
+            <strong>
+                {{ c.author.username }}
+            </strong>
+
+            {{ c.comment }}
+
+            <span
+                class="reply-btn"
+                data-comment-id="{{ c.id }}"
+                style="
+                    color:#4da6ff;
+                    cursor:pointer;
+                    margin-left:10px;
+                "
+            >
+                Reply
+            </span>
+
+            <div class="reply-form-container"></div>
+
+            <div class="reply-container">
+
+                {% for reply in c.replies.all %}
+
+                <div
+                    style="
+                        margin-left:40px;
+                        margin-top:5px;
+                        color:#ddd;
+                    "
                 >
-                <button type="submit" style="padding:18px 18px; background:#e1306c; color:white; border:none; border-radius:6px; cursor:pointer;">Post</button>
-            </form>
-            <button onclick="this.parentElement.style.display = 'none'">Close</button>
-  </div>
+
+                    <strong>
+                        {{ reply.author.username }}
+                    </strong>
+
+                    {{ reply.comment }}
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
         </div>
-          </div>
+
+        {% endif %}
+
+    {% endfor %}
+
+</div>
         
         <div class="post-caption">
         
@@ -464,59 +497,7 @@ $(".like-btn").click(function(){
     });
 
 });
-let commentContainer = 
-    document.getElementById("comment-container");
 
-function createInputBox() {
-    let div = document.createElement("div");
-
-    div.setAttribute("class", "comment-details");
-
-    div.innerHTML += `<input type="text"
-                             placeholder="add text here"
-                             class="input" />
-                      <button class="btn submit">
-                           Submit
-                      </button>`;
-    return div;
-}
-function addReply(text) {
-    let div = document.createElement("div");
-
-    div.setAttribute("class", "all-comment");
-    
-    div.innerHTML += `<div class="card">
-                      <span class="text">
-                      ${text}
-                      </span>
-                      <span id="reply" class="reply">
-                      Add Reply
-                      </span></div>`;
-    return div;
-}
-
-commentContainer.addEventListener("click", function (e) {
-    let replyClicked =
-        e.target.classList.contains("reply");
-    let submitClicked =
-        e.target.classList.contains("submit");
-    let closestCard =
-        e.target.closest(".all-comment");
-
-    if (replyClicked) {
-        closestCard.appendChild(createInputBox());
-    }
-
-    if (submitClicked) {
-        const commentDetails =
-            e.target.closest(".comment-details");
-        if (commentDetails.children[0].value) {
-            closestCard.appendChild(
-                addReply(commentDetails.children[0].value));
-            commentDetails.remove();
-        }
-    }
-}); 
 $(".follow-btn").click(function(){
     var btn = $(this);
     var user_id = btn.data("user-id");
@@ -560,18 +541,149 @@ $(document).on("submit", ".comment-form", function(e){
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
         data: { comment: text },
         success: function(response){
-            $("#comments-list-" + post_id).append(
-                '<div style="background : black;color:white;font-size:14px;padding:4px 0;border-bottom:1px solid #222;">' +
-                '<strong>' + response.author  +  ':' + '</strong> '  + response.comment + '&#8618' +
-                '</div>'
-            );
-            input.val("");
-        }
+
+    $("#comments-list-" + post_id).append(
+
+        '<div class="comment-item" data-comment-id="' + response.id + '" style="background:black;color:white;padding:8px;border-bottom:1px solid #222;">' +
+
+        '<strong>' + response.author + '</strong> ' +
+
+        response.comment +
+
+        '<span class="reply-btn" data-comment-id="' + response.id + '" style="color:#4da6ff;cursor:pointer;margin-left:10px;">Reply</span>' +
+
+        '<div class="reply-form-container"></div>' +
+
+        '<div class="reply-container"></div>' +
+
+        '</div>'
+
+    );
+
+    input.val("");
+
+}
     });
 });
 
 });
+$(document).on(
+    "click",
+    ".reply-btn",
+    function(){
 
+        $(".reply-form-container").empty();
+
+        var commentId =
+            $(this).data("comment-id");
+
+        var container =
+            $(this).next(
+                ".reply-form-container"
+            );
+
+        container.html(
+            `
+            <form
+                class="reply-form"
+                data-comment-id="${commentId}"
+            >
+
+                <input
+                    type="text"
+                    name="reply"
+                    placeholder="Write a reply..."
+                    style="
+                        width:70%;
+                        margin-top:5px;
+                    "
+                >
+
+                <button type="submit">
+                    Reply
+                </button>
+
+            </form>
+            `
+        );
+
+    }
+);
+$(document).on(
+    "submit",
+    ".reply-form",
+    function(e){
+
+        e.preventDefault();
+
+        var form = $(this);
+
+        var comment_id =
+            form.data("comment-id");
+
+        var text =
+            form.find(
+                "input[name='reply']"
+            ).val();
+
+        var post_id =
+            form.closest(
+                "[id^='comment-box-']"
+            )
+            .attr("id")
+            .replace(
+                "comment-box-",
+                ""
+            );
+
+        $.ajax({
+
+            url:
+            "/post/comment/" +
+            post_id +
+            "/",
+
+            type:"POST",
+
+            headers:{
+                "X-CSRFToken":
+                "{{ csrf_token }}"
+            },
+
+            data:{
+                comment:text,
+                parent_id:comment_id
+            },
+
+            success:function(response){
+
+    form
+    .closest(".comment-item")
+    .find(".reply-container")
+    .append(
+
+        '<div style="margin-left:40px;margin-top:5px;color:#ddd;">' +
+
+        '<strong>' +
+
+        response.author +
+
+        '</strong> ' +
+
+        response.comment +
+
+        '</div>'
+
+    );
+
+    form.remove();
+
+}
+
+        });
+
+    }
+);
 function openNav() {
   document.getElementById("mySidenav").style.width = "250px";
   document.getElementById("main").style.marginLeft = "250px";

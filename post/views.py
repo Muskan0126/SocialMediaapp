@@ -331,15 +331,28 @@ def add_comment(request, post_id):
     if request.method == "POST":
         post = get_object_or_404(Post, id=post_id)
         text = request.POST.get("comment", "").strip()
+        parent_id = request.POST.get("parent_id", "").strip()
         if text:
             import uuid
-            Comment.objects.create(
+            parent = None
+            if parent_id:
+                try:
+                    parent = Comment.objects.get(id=parent_id)
+                except Comment.DoesNotExist:
+                    pass
+            c = Comment.objects.create(
                 id=str(uuid.uuid4())[:25],
                 author=request.user,
                 item=post,
                 comment=text,
+                parent=parent,
             )
-            return JsonResponse({"author": request.user.username, "comment": text})
+            return JsonResponse({
+                "id": c.id,
+                "author": request.user.username,
+                "comment": text,
+                "parent_id": parent_id or None,
+            })
     return JsonResponse({"error": "invalid"}, status=400)
 
 

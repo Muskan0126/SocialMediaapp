@@ -40,7 +40,8 @@ class Likes(models.Model):
 class Comment(models.Model):
     id = models.CharField(max_length=25, primary_key=True, unique=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    item = models.ForeignKey(Post, on_delete=models.CASCADE)
+    item = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
     comment = models.TextField(blank=False)
     total_likes = models.ManyToManyField(User, related_name='total_likes', blank=True)
     liked_by_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='liked_comment')
