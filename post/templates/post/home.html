@@ -284,7 +284,7 @@ white-space:normal;
         </div>
           <div style="display:flex; gap:10px; align-items:center;">
             {% if post.user != request.user %}
-            
+          
             <button
                 class="follow-btn"
                 data-user-id="{{ post.user.id }}"
@@ -356,7 +356,7 @@ white-space:normal;
   <span id="likes-count-{{ post.id }}">
     {{ post.comments.count }}
 </span>
-    
+
 <div class = "comment"
     data-comment-id="{{ c.id }}">
         <div id="comment-box-{{ post.id }}" style="display: none; position: absolute; top: 40px; left: 0; z-index: 100; background: white; border: 1px solid #ccc; padding: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height:auto ; width: 700px;">
@@ -365,7 +365,7 @@ white-space:normal;
     {% for c in post.comments.all %}
 
         {% if not c.parent %}
-
+       
         <div
             class="comment-item"
             data-comment-id="{{ c.id }}"
@@ -376,7 +376,7 @@ white-space:normal;
                 border-bottom:1px solid #222;
             "
         >
-
+  
             <strong>
                 {{ c.author.username }}
             </strong>
@@ -392,15 +392,15 @@ white-space:normal;
                     margin-left:10px;
                 "
             >
-                Reply
+            &#8618
             </span>
-
+         
             <div class="reply-form-container"></div>
 
             <div class="reply-container">
-
+            
                 {% for reply in c.replies.all %}
-
+                
                 <div
                     style="
                         margin-left:40px;
@@ -412,21 +412,51 @@ white-space:normal;
                     <strong>
                         {{ reply.author.username }}
                     </strong>
-
+                   
                     {{ reply.comment }}
+                    <span
+                    class="reply-btn"
+                    data-comment-id="{{ c.id }}"
+                    style="
+                        color:#4da6ff;
+                        cursor:pointer;
+                        margin-left:10px;
+                    "
+                >
+            
+                &#8618
+                    </span>
+                    <div class="reply-form-container"></div>
 
+            <div class="reply-container">
+                  </div>
                 </div>
 
                 {% endfor %}
-
-            </div>
-
+   </div>
+  
         </div>
-
+       
         {% endif %}
-
+        
     {% endfor %}
+    
+</div>
+<form class="comment-form" data-post-id="{{ post.id }}" style="display:flex; gap:8px;">
+  {% csrf_token %}
+  <input
+      type="text"
+      name="comment"
+      placeholder="Add a comment..."
+      autocomplete="off"
+      style="flex:1; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:white;"
+  >
+  <button type="submit" style="padding:8px 8px; background:#e1306c; color:white; border:none; border-radius:6px; cursor:pointer;">Post</button>
+</form>
 
+<button onclick="this.parentElement.style.display = 'none'">Close</button>
+</div>
+</div>
 </div>
         
         <div class="post-caption">
@@ -600,7 +630,7 @@ $(document).on(
                 >
 
                 <button type="submit">
-                    Reply
+                     Reply
                 </button>
 
             </form>
@@ -671,6 +701,7 @@ $(document).on(
         '</strong> ' +
 
         response.comment +
+        '<span class="reply-btn" data-comment-id="' + response.id + '" style="color:#4da6ff;cursor:pointer;margin-left:10px;"> &#8618</span>' +
 
         '</div>'
 
