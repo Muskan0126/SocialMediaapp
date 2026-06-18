@@ -277,7 +277,25 @@ def notifications_view(request):
         receiver=request.user
     ).select_related("sender")
     notifications.update(is_read=True)
-    return render(request, "post/notifications.html", {"notifications": notifications})
+
+    following_ids = (
+        Follow.objects
+        .filter(follower=request.user)
+        .values_list(
+            "following_id",
+            flat=True
+        )
+    )
+
+    return render(
+        request,
+        "post/notifications.html",
+        {
+            "notifications": notifications,
+            "following_ids": following_ids,
+        }
+    )
+   
 
 
 @login_required

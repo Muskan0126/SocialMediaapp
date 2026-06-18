@@ -364,82 +364,13 @@ white-space:normal;
 
     {% for c in post.comments.all %}
 
-        {% if not c.parent %}
-       
-        <div
-            class="comment-item"
-            data-comment-id="{{ c.id }}"
-            style="
-                background:black;
-                color:white;
-                padding:8px;
-                border-bottom:1px solid #222;
-            "
-        >
-  
-            <strong>
-                {{ c.author.username }}
-            </strong>
+    {% if not c.parent %}
 
-            {{ c.comment }}
+        {% include "post/comment_tree.html" with comment=c level=0 %}
 
-            <span
-                class="reply-btn"
-                data-comment-id="{{ c.id }}"
-                style="
-                    color:#4da6ff;
-                    cursor:pointer;
-                    margin-left:10px;
-                "
-            >
-            &#8618
-            </span>
-         
-            <div class="reply-form-container"></div>
+    {% endif %}
 
-            <div class="reply-container">
-            
-                {% for reply in c.replies.all %}
-                
-                <div
-                    style="
-                        margin-left:40px;
-                        margin-top:5px;
-                        color:#ddd;
-                    "
-                >
-
-                    <strong>
-                        {{ reply.author.username }}
-                    </strong>
-                   
-                    {{ reply.comment }}
-                    <span
-                    class="reply-btn"
-                    data-comment-id="{{ c.id }}"
-                    style="
-                        color:#4da6ff;
-                        cursor:pointer;
-                        margin-left:10px;
-                    "
-                >
-            
-                &#8618
-                    </span>
-                    <div class="reply-form-container"></div>
-
-            <div class="reply-container">
-                  </div>
-                </div>
-
-                {% endfor %}
-   </div>
-  
-        </div>
-       
-        {% endif %}
-        
-    {% endfor %}
+{% endfor %}
     
 </div>
 <form class="comment-form" data-post-id="{{ post.id }}" style="display:flex; gap:8px;">
@@ -689,22 +620,25 @@ $(document).on(
 
     form
     .closest(".comment-item")
-    .find(".reply-container")
+    .children(".reply-container")
+    .first()
     .append(
 
-        '<div style="margin-left:40px;margin-top:5px;color:#ddd;">' +
+        '<div class="comment-item" data-comment-id="' + response.id + '" style="margin-left:40px;margin-top:5px;color:#ddd;">' +
 
-        '<strong>' +
+            '<strong>' +
+                response.author +
+            '</strong> ' +
 
-        response.author +
+            response.comment +
 
-        '</strong> ' +
+            '<span class="reply-btn" data-comment-id="' + response.id + '" style="color:#4da6ff;cursor:pointer;margin-left:10px;">&#8618;</span>' +
 
-        response.comment +
-        '<span class="reply-btn" data-comment-id="' + response.id + '" style="color:#4da6ff;cursor:pointer;margin-left:10px;"> &#8618</span>' +
+            '<div class="reply-form-container"></div>' +
+
+            '<div class="reply-container"></div>' +
 
         '</div>'
-
     );
 
     form.remove();
