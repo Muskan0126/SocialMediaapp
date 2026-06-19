@@ -10,6 +10,7 @@ from django.contrib.auth import (
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.contrib import messages
+from django.views import View
 
 from .forms import (
     SignupForm,
@@ -22,13 +23,17 @@ from .models import otp
 
 User = get_user_model()
 
+class signup_view(View):
+    def get(self,request):
 
-def signup_view(request):
-
-    form = SignupForm()
-
-    if request.method == "POST":
-
+        form = SignupForm()
+        return render(
+        request,
+        "useraccount/signup.html",
+        {"form": form}
+    )
+    def post(self,request):
+    
         form = SignupForm(request.POST)
 
         if form.is_valid():
@@ -108,19 +113,23 @@ def signup_view(request):
 
             return redirect("login")
 
-    return render(
-        request,
-        "useraccount/signup.html",
-        {"form": form}
-    )
+        return render(
+            request,
+            "useraccount/signup.html",
+            {"form": form}
+        )
 
 
-def login_view(request):
+class login_view(View):
+    def get(self,request):
 
-    form = LoginForm()
-
-    if request.method == "POST":
-
+        form = LoginForm()
+        return render(
+            request,
+            "useraccount/login.html",
+            {"form": form}
+        )
+    def post(self,request):
         form = LoginForm(request.POST)
 
         if form.is_valid():
@@ -145,11 +154,11 @@ def login_view(request):
                 "Invalid username or password."
             )
 
-    return render(
-        request,
-        "useraccount/login.html",
-        {"form": form}
-    )
+        return render(
+            request,
+            "useraccount/login.html",
+            {"form": form}
+        )
 
 
 def logout_view(request):
@@ -164,11 +173,15 @@ def logout_view(request):
     return redirect("login")
 
 
-def forgot_password_view(request):
-
-    form = ForgotPasswordForm()
-
-    if request.method == "POST":
+class forgot_password_view(View):
+    def get(self,request):
+        form = ForgotPasswordForm()
+        return render(
+            request,
+            "useraccount/forgot_password.html",
+            {"form": form}
+        )
+    def post(self, request):
 
         form = ForgotPasswordForm(request.POST)
 
@@ -231,18 +244,22 @@ def forgot_password_view(request):
 
             return redirect("reset_password")
 
-    return render(
-        request,
-        "useraccount/forgot_password.html",
-        {"form": form}
-    )
+        return render(
+            request,
+            "useraccount/forgot_password.html",
+            {"form": form}
+        )
 
 
-def reset_password_view(request):
-
-    form = ResetPasswordForm()
-
-    if request.method == "POST":
+class reset_password_view(View):
+    def get(self,request):
+        form = ResetPasswordForm()
+        return render(
+            request,
+            "useraccount/reset_password.html",
+            {"form": form}
+        )
+    def post(self,request):
 
         form = ResetPasswordForm(request.POST)
 
@@ -328,17 +345,17 @@ def reset_password_view(request):
 
             return redirect("login")
 
-    return render(
-        request,
-        "useraccount/reset_password.html",
-        {"form": form}
-    )
+        return render(
+            request,
+            "useraccount/reset_password.html",
+            {"form": form}
+        )
 
 
-@login_required
-def home_view(request):
 
-    return render(
-        request,
-        "useraccount/home.html"
-    )
+class home_view(View):
+    def get(self,request):
+        return render(
+            request,
+            "useraccount/home.html"
+        )

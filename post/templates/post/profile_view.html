@@ -203,13 +203,18 @@ onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
                 <dialog id="postPopup_{{ post.id }}" style="border:none; border-radius:8px; padding:20px; background:#111; color:white;">
                   <img src="{{ post.picture.url }}" alt="Post Image" style="max-width:800px; max-height:800px; height:auto; display:block;">
                   <br>
-                  
-                  
-                  
+                  <div>
                   <div id="likes-count-{{ post.id }}">
                     {{ post.post_likes.count }}
                     Likes
                   </div>
+              
+                  <div id="comments-count-{{ post.id }}">
+                    {{ post.comments.count }}
+                    &#8506
+                  </div>
+                  </div>
+                
                 
             <div>
             <strong>

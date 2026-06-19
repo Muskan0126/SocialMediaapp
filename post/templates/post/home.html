@@ -114,7 +114,8 @@ font-size: 20px;
 width:800px;
 max-height:400px;
 object-fit:cover; 
-display : block}
+display : block;
+align-items: center;}
 
 .post-content{
 padding:15px;
@@ -196,6 +197,16 @@ white-space:normal;
   <a href="{% url 'create_story' %}"> &#128934 Add Story</a>
   <a href="{% url 'logout' %}">&#10149 Signout</a>
   <a href="{% url 'profile_view' %}"> &#9787 Profile</a>
+  <a href="{% url 'forgot_password' %}" style="background:none; border:none; color:red; cursor:pointer; font-size:16px; padding:0; text-align: center; margin-bottom: 2%;">
+    Reset Password
+  </a>
+
+  <form method="post" action="{% url 'delete_account' %}" style="display:inline;" onsubmit="return confirm('Are you sure? This will permanently delete your account, posts, and stories.');">
+    {% csrf_token %}
+    <button type="submit" style="background:none; border:none; color:red; cursor:pointer; font-size:16px; padding-bottom:0; margin-left:10px;margin-left: 28%; margin-top: 70%;">
+        Delete Account
+    </button>
+</form>
 </div>
 
 <div id="main">
@@ -353,7 +364,7 @@ white-space:normal;
   
   <button onclick="document.getElementById('comment-box-{{ post.id }}').style.display = 'block'" 
   style="height: 45px; width: 45px; font-size: 30px; background : rgb(15, 15, 15); border: #0f0f0f; color : white">&#8506</button>
-  <span id="likes-count-{{ post.id }}">
+  <span id="comments-count-{{ post.id }}">
     {{ post.comments.count }}
 </span>
 
@@ -502,7 +513,7 @@ $(document).on("submit", ".comment-form", function(e){
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
         data: { comment: text },
         success: function(response){
-
+            
     $("#comments-list-" + post_id).append(
 
         '<div class="comment-item" data-comment-id="' + response.id + '" style="background:black;color:white;padding:8px;border-bottom:1px solid #222;">' +
@@ -518,8 +529,12 @@ $(document).on("submit", ".comment-form", function(e){
         '<div class="reply-container"></div>' +
 
         '</div>'
-
+        
     );
+    $("#comments-count-" + post_id)
+            .text(
+                response.comment_count
+            );
 
     input.val("");
 
@@ -617,7 +632,7 @@ $(document).on(
             },
 
             success:function(response){
-
+            
     form
     .closest(".comment-item")
     .children(".reply-container")
@@ -638,11 +653,15 @@ $(document).on(
 
             '<div class="reply-container"></div>' +
 
-        '</div>'
+        '</div>'      
     );
+    $("#comments-count-" + post_id)
+            .text(
+                response.comment_count
+            );
 
     form.remove();
-
+   
 }
 
         });
@@ -651,12 +670,12 @@ $(document).on(
 );
 function openNav() {
   document.getElementById("mySidenav").style.width = "250px";
-  document.getElementById("main").style.marginLeft = "250px";
+  
 }
 
 function closeNav() {
   document.getElementById("mySidenav").style.width = "0";
-  document.getElementById("main").style.marginLeft= "0";
+  
 }
 </script>
    
