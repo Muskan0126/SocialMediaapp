@@ -13,6 +13,8 @@ from .views import (
     follow_user,
     notifications_view,
     add_comment,
+    delete_comment_view,
+    edit_caption_view,
 )
 
 urlpatterns = [
@@ -77,5 +79,15 @@ urlpatterns = [
         "comment/<int:post_id>/",
         add_comment.as_view(),
         name="add_comment"
+    ),
+    path(
+        "comment/delete/<str:comment_id>/",
+        delete_comment_view.as_view(),
+        name="delete_comment"
+    ),
+    path(
+        "edit-caption/<int:post_id>/",
+        edit_caption_view.as_view(),
+        name="edit_caption"
     ),
 ]

@@ -4,9 +4,90 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+/* custom modal overlay */
+.custom-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.custom-overlay.open {
+  display: flex;
+}
+.custom-modal {
+  background: #1e1e1e;
+  color: white;
+  border-radius: 10px;
+  padding: 24px;
+  min-width: 320px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.custom-modal h5 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+.custom-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.custom-modal textarea {
+  width: 100%;
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.modal-btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.modal-btn-cancel { background: #444; color: white; }
+.modal-btn-danger { background: #e1306c; color: white; }
+.modal-btn-primary { background: #4da6ff; color: white; }
+.upload-form p {
+  margin: 0 0 14px;
+}
+.upload-form label {
+  display: block;
+  margin-bottom: 6px;
+  color: #ddd;
+  font-size: 14px;
+}
+.upload-form input,
+.upload-form textarea {
+  width: 100%;
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+.upload-form input[type="file"] {
+  padding: 7px;
+}
+</style>
 <style>
 body {
   font-family: "Lato", sans-serif;
+  background-color: #111;
+  min-height: 100vh;
 }
 
 .sidenav {
@@ -48,6 +129,30 @@ body {
   padding: 16px;
   background-color: #111;
   color : #f1f1f1;
+}
+
+.home-topbar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:20px;
+}
+
+.home-actions {
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.home-action-btn {
+  background:#e1306c;
+  color:white;
+  border:0;
+  border-radius:6px;
+  padding:8px 14px;
+  cursor:pointer;
+  font-size:14px;
 }
 
 @media screen and (max-height: 450px) {
@@ -122,6 +227,178 @@ padding:15px;
 align-content: center;
 }
 
+.post-actions{
+display:flex;
+align-items:center;
+gap:10px;
+color:white;
+}
+
+.comment-open-btn{
+height:45px;
+width:45px;
+font-size:30px;
+background:rgb(15, 15, 15);
+border:1px solid #0f0f0f;
+color:white;
+cursor:pointer;
+}
+
+.comment-modal{
+max-width:620px;
+padding:22px 26px;
+}
+
+.comment-modal-header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:16px;
+margin-bottom:16px;
+}
+
+.comment-modal-header h5{
+margin:0;
+}
+
+.modal-x-btn{
+background:none;
+border:0;
+color:white;
+cursor:pointer;
+font-size:26px;
+line-height:1;
+padding:0 4px;
+}
+
+.comments-list{
+max-height:340px;
+overflow-y:auto;
+overflow-x:hidden;
+margin-bottom:14px;
+padding-right:8px;
+}
+
+.comments-empty{
+color:#888;
+font-size:14px;
+margin:0 0 14px;
+}
+
+.comment-item{
+background:transparent;
+border:0;
+border-bottom:1px solid #282828;
+border-radius:0;
+color:#ddd;
+margin-top:0;
+padding:8px 2px;
+overflow-wrap: break-word;
+word-break:break-word;
+white-space:normal;
+}
+
+.reply-container{
+border-left:2px solid #242424;
+margin-top:4px;
+margin-left:8px;
+padding-left:10px;
+}
+
+.reply-container .comment-item{
+border-bottom:0;
+padding:6px 0 2px;
+}
+
+.comment-item strong{
+color:white;
+}
+
+.comment-header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+flex-wrap:wrap;
+gap:8px;
+}
+
+.comment-author-actions{
+display:flex;
+align-items:center;
+gap:8px;
+min-width:0;
+}
+
+.comment-text{
+display:block;
+margin-top:2px;
+line-height:1.4;
+font-size:15px;
+}
+
+.reply-btn{
+color:#4da6ff;
+cursor:pointer;
+font-size:13px;
+line-height:1;
+padding:2px 0;
+}
+
+.delete-comment-btn{
+background:none;
+border:0;
+color:#888;
+cursor:pointer;
+font-size:12px;
+line-height:1.2;
+padding:0;
+opacity:.9;
+}
+
+.delete-comment-btn:hover{
+color:#e1306c;
+}
+
+.comment-form,
+.reply-form{
+display:flex;
+gap:8px;
+margin-top:12px;
+}
+
+.comment-form input,
+.reply-form input{
+flex:1;
+min-width:0;
+padding:11px 12px;
+background:#1a1a1a;
+border:1px solid #333;
+border-radius:6px;
+color:white;
+}
+
+.comment-form button,
+.reply-form button{
+padding:9px 14px;
+background:#e1306c;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.reply-form{
+max-width:100%;
+}
+
+.reply-form input{
+padding:8px 10px;
+}
+
+.reply-form button{
+padding:8px 12px;
+}
+
 .post-caption{
 margin-top:10px;
 color:white;
@@ -131,6 +408,29 @@ inline-size: 600px;
 overflow-wrap: break-word;
 word-break:break-word;
 white-space:normal;
+}
+
+.caption-text {
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+}
+
+.caption-text.expanded {
+display: block;
+overflow: visible;
+-webkit-line-clamp: unset;
+}
+
+.caption-toggle{
+background:none;
+border:0;
+color:#4da6ff;
+cursor:pointer;
+font-size:14px;
+padding:0;
+margin-left:4px;
 }
 
 .comment{
@@ -193,8 +493,6 @@ white-space:normal;
   <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
   <a href="{% url 'home' %}"> Home</a>
   <a href="{% url 'notifications' %}">&#8506 Message</a>
-  <a href="{% url 'create_post' %}"> &#128934 Add Post</a>
-  <a href="{% url 'create_story' %}"> &#128934 Add Story</a>
   <a href="{% url 'logout' %}">&#10149 Signout</a>
   <a href="{% url 'profile_view' %}"> &#9787 Profile</a>
   <a href="{% url 'forgot_password' %}" style="background:none; border:none; color:red; cursor:pointer; font-size:16px; padding:0; text-align: center; margin-bottom: 2%;">
@@ -210,7 +508,17 @@ white-space:normal;
 </div>
 
 <div id="main">
-    <span style="font-size:30px;color: #c0358b;cursor:pointer" onclick="openNav()">&#9776; Instagram</span>
+    <div class="home-topbar">
+      <span style="font-size:30px;color: #c0358b;cursor:pointer" onclick="openNav()">&#9776; Instagram</span>
+      <div class="home-actions">
+        <button type="button" class="home-action-btn upload-open-btn" data-upload-target="postUploadOverlay">
+          Add Post
+        </button>
+        <button type="button" class="home-action-btn upload-open-btn" data-upload-target="storyUploadOverlay">
+          Add Story
+        </button>
+      </div>
+    </div>
     
     <div class="container">
 
@@ -271,7 +579,7 @@ white-space:normal;
         
         {% for post in posts %}
         
-        <div class="post">
+        <div class="post" data-post-id="{{ post.id }}">
         
         <div class="post-header">
         
@@ -312,12 +620,25 @@ white-space:normal;
             </button>
             {% endif %}
             {% if post.user == request.user %}
-            <a href="{% url 'delete_post' post.id %}"
-               onclick="return confirm('Are you sure you want to delete this post?')"
-               style="color: rgb(255, 252, 252); text-decoration: none; font-size: 14px;"
-               title="Delete Post">
-               &#9401;
-            </a>
+            <!-- 3-dot menu -->
+            <div style="position:relative;">
+              <button class="three-dot-btn" data-post-id="{{ post.id }}"
+                style="background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;">&#8942;</button>
+              <div class="post-menu" id="post-menu-{{ post.id }}"
+                style="display:none;position:absolute;right:0;top:28px;background:#222;border:1px solid #444;border-radius:8px;min-width:140px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+                <div class="post-menu-item edit-caption-btn"
+                  data-post-id="{{ post.id }}"
+                  data-caption="{{ post.caption }}"
+                  style="padding:10px 16px;cursor:pointer;color:white;border-bottom:1px solid #444;">
+                  ✏️ Edit Caption
+                </div>
+                <div class="post-menu-item delete-post-btn"
+                  data-post-id="{{ post.id }}"
+                  style="padding:10px 16px;cursor:pointer;color:#e1306c;">
+                  🗑️ Delete Post
+                </div>
+              </div>
+            </div>
             {% endif %}
           </div>
         </div>
@@ -355,23 +676,30 @@ white-space:normal;
                 {{ post.post_likes.count }}
             </span>
         
-            Likes
-            &nbsp;
-            
+            <span>Likes</span>
 
-<div style="position: relative; display: inline-block;">
-    
-  
-  <button onclick="document.getElementById('comment-box-{{ post.id }}').style.display = 'block'" 
-  style="height: 45px; width: 45px; font-size: 30px; background : rgb(15, 15, 15); border: #0f0f0f; color : white">&#8506</button>
-  <span id="comments-count-{{ post.id }}">
-    {{ post.comments.count }}
-</span>
+            <button type="button" class="comment-open-btn" data-comment-target="comment-box-{{ post.id }}">
+              &#8506
+            </button>
+            <span id="comments-count-{{ post.id }}">
+              {{ post.comments.count }}
+            </span>
+          </div> <!-- end post-actions -->
 
-<div class = "comment"
-    data-comment-id="{{ c.id }}">
-        <div id="comment-box-{{ post.id }}" style="display: none; position: absolute; top: 40px; left: 0; z-index: 100; background: white; border: 1px solid #ccc; padding: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height:auto ; width: 700px;">
-          <div id="comments-list-{{ post.id }}" style="margin-bottom:8px;">
+          <div class="post-caption">
+            <strong>{{ post.user.username }}</strong>
+            <span class="caption-text" data-full-caption="{{ post.caption }}">{{ post.caption }}</span>
+            <button type="button" class="caption-toggle" style="display:none;">Read more</button>
+          </div>
+        </div> <!-- end post-content -->
+
+        <div class="custom-overlay comment-overlay" id="comment-box-{{ post.id }}">
+          <div class="custom-modal comment-modal">
+            <div class="comment-modal-header">
+              <h5>Comments</h5>
+              <button type="button" class="modal-x-btn comment-close-btn">&times;</button>
+            </div>
+            <div id="comments-list-{{ post.id }}" class="comments-list">
 
     {% for c in post.comments.all %}
 
@@ -382,45 +710,156 @@ white-space:normal;
     {% endif %}
 
 {% endfor %}
+    {% if not post.comments.all %}
+      <p class="comments-empty">No comments yet.</p>
+    {% endif %}
     
-</div>
-<form class="comment-form" data-post-id="{{ post.id }}" style="display:flex; gap:8px;">
-  {% csrf_token %}
-  <input
-      type="text"
-      name="comment"
-      placeholder="Add a comment..."
-      autocomplete="off"
-      style="flex:1; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:white;"
-  >
-  <button type="submit" style="padding:8px 8px; background:#e1306c; color:white; border:none; border-radius:6px; cursor:pointer;">Post</button>
-</form>
-
-<button onclick="this.parentElement.style.display = 'none'">Close</button>
-</div>
-</div>
-</div>
-        
-        <div class="post-caption">
-        
-        <strong>
-        {{ post.user.username }}
-        </strong>
-        
-        {{ post.caption }}
-        
-      </div>
-      
+            </div>
+            <form class="comment-form" data-post-id="{{ post.id }}">
+              {% csrf_token %}
+              <input
+                  type="text"
+                  name="comment"
+                  placeholder="Add a comment..."
+                  autocomplete="off"
+              >
+              <button type="submit">Post</button>
+            </form>
+          </div>
         </div>
       
-        </div>
+        </div> <!-- end post -->
         
         {% endfor %}
+
+        </div> <!-- end .container -->
+        </div> <!-- end #main -->
+
+<!-- Add Post Modal -->
+<div class="custom-overlay upload-overlay" id="postUploadOverlay">
+  <div class="custom-modal">
+    <h5>Add Post</h5>
+    <form class="upload-form" method="post" action="{% url 'create_post' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ post_form.as_p }}
+      <div class="modal-footer">
+        <button type="button" class="modal-btn modal-btn-cancel upload-close-btn">Cancel</button>
+        <button type="submit" class="modal-btn modal-btn-primary">Share</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add Story Modal -->
+<div class="custom-overlay upload-overlay" id="storyUploadOverlay">
+  <div class="custom-modal">
+    <h5>Add Story</h5>
+    <form class="upload-form" method="post" action="{% url 'create_story' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ story_form.as_p }}
+      <div class="modal-footer">
+        <button type="button" class="modal-btn modal-btn-cancel upload-close-btn">Cancel</button>
+        <button type="submit" class="modal-btn modal-btn-primary">Upload</button>
+      </div>
+    </form>
+  </div>
+</div>
         
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Delete Post Modal -->
+<div class="modal fade" id="deletePostModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title">Delete Post</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">Are you sure you want to delete this post? This cannot be undone.</div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Caption Modal -->
+<div class="custom-overlay" id="editCaptionOverlay">
+  <div class="custom-modal">
+    <h5>Edit Caption</h5>
+    <textarea id="editCaptionText" rows="4"></textarea>
+    <div class="modal-footer">
+      <button type="button" class="modal-btn modal-btn-cancel" id="cancelEditBtn">Cancel</button>
+      <button type="button" class="modal-btn modal-btn-primary" id="confirmEditCaptionBtn">Save</button>
+    </div>
+  </div>
+</div>
 
 <script>
 $(document).ready(function(){
+
+    // Read more / read less for captions
+    $(".caption-text").each(function(){
+        var $span = $(this);
+        var $btn = $span.siblings(".caption-toggle");
+        // Only show toggle if text is actually clamped
+        if (this.scrollHeight > this.clientHeight + 2) {
+            $btn.show();
+        }
+    });
+
+    $(document).on("click", ".caption-toggle", function(){
+        var $btn = $(this);
+        var $span = $btn.siblings(".caption-text");
+        if ($span.hasClass("expanded")) {
+            $span.removeClass("expanded");
+            $btn.text("Read more");
+        } else {
+            $span.addClass("expanded");
+            $btn.text("Read less");
+        }
+    });
+
+$(".upload-open-btn").click(function(){
+    var targetId = $(this).data("upload-target");
+    $("#" + targetId).addClass("open");
+});
+
+$(".upload-close-btn").click(function(){
+    $(this).closest(".upload-overlay").removeClass("open");
+});
+
+$(".upload-overlay").click(function(e){
+    if (e.target === this) {
+        $(this).removeClass("open");
+    }
+});
+
+$(".comment-open-btn").click(function(){
+    $("#" + $(this).data("comment-target")).addClass("open");
+});
+
+$(".comment-close-btn").click(function(){
+    $(this).closest(".comment-overlay").removeClass("open");
+});
+
+$(".comment-overlay").click(function(e){
+    if (e.target === this) {
+        $(this).removeClass("open");
+    }
+});
+
+$(document).on("keydown", function(e){
+    if (e.key === "Escape") {
+        $(".upload-overlay, .comment-overlay").removeClass("open");
+    }
+});
+
+window.escapeHtml = function(value){
+    return $("<div>").text(value).html();
+};
 
 $(".like-btn").click(function(){
 
@@ -513,16 +952,27 @@ $(document).on("submit", ".comment-form", function(e){
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
         data: { comment: text },
         success: function(response){
+    $("#comments-list-" + post_id + " .comments-empty").remove();
             
     $("#comments-list-" + post_id).append(
 
-        '<div class="comment-item" data-comment-id="' + response.id + '" style="background:black;color:white;padding:8px;border-bottom:1px solid #222;">' +
+        '<div class="comment-item" data-comment-id="' + response.id + '">' +
 
-        '<strong>' + response.author + '</strong> ' +
+        '<div class="comment-header">' +
 
-        response.comment +
+        '<div class="comment-author-actions">' +
 
-        '<span class="reply-btn" data-comment-id="' + response.id + '" style="color:#4da6ff;cursor:pointer;margin-left:10px;">Reply</span>' +
+        '<strong>' + escapeHtml(response.author) + '</strong>' +
+
+        '<span class="reply-btn" data-comment-id="' + response.id + '" title="Reply">&#8618;</span>' +
+
+        '</div>' +
+
+        '<button type="button" class="delete-comment-btn" data-comment-id="' + response.id + '" title="Delete comment">Delete</button>' +
+
+        '</div>' +
+
+        '<span class="comment-text">' + escapeHtml(response.comment) + '</span>' +
 
         '<div class="reply-form-container"></div>' +
 
@@ -554,9 +1004,10 @@ $(document).on(
             $(this).data("comment-id");
 
         var container =
-            $(this).next(
-                ".reply-form-container"
-            );
+            $(this)
+            .closest(".comment-item")
+            .children(".reply-form-container")
+            .first();
 
         container.html(
             `
@@ -569,10 +1020,6 @@ $(document).on(
                     type="text"
                     name="reply"
                     placeholder="Write a reply..."
-                    style="
-                        width:70%;
-                        margin-top:5px;
-                    "
                 >
 
                 <button type="submit">
@@ -639,15 +1086,25 @@ $(document).on(
     .first()
     .append(
 
-        '<div class="comment-item" data-comment-id="' + response.id + '" style="margin-left:40px;margin-top:5px;color:#ddd;">' +
+        '<div class="comment-item" data-comment-id="' + response.id + '">' +
+
+            '<div class="comment-header">' +
+
+            '<div class="comment-author-actions">' +
 
             '<strong>' +
-                response.author +
-            '</strong> ' +
+                escapeHtml(response.author) +
+            '</strong>' +
 
-            response.comment +
+            '<span class="reply-btn" data-comment-id="' + response.id + '" title="Reply">&#8618;</span>' +
 
-            '<span class="reply-btn" data-comment-id="' + response.id + '" style="color:#4da6ff;cursor:pointer;margin-left:10px;">&#8618;</span>' +
+            '</div>' +
+
+            '<button type="button" class="delete-comment-btn" data-comment-id="' + response.id + '" title="Delete comment">Delete</button>' +
+
+            '</div>' +
+
+            '<span class="comment-text">' + escapeHtml(response.comment) + '</span>' +
 
             '<div class="reply-form-container"></div>' +
 
@@ -668,6 +1125,27 @@ $(document).on(
 
     }
 );
+
+$(document).on("click", ".delete-comment-btn", function(){
+    var button = $(this);
+    var commentId = button.data("comment-id");
+    var commentItem = button.closest(".comment-item");
+    var commentsList = button.closest(".comments-list");
+
+    $.ajax({
+        url: "/post/comment/delete/" + commentId + "/",
+        type: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        success: function(response){
+            commentItem.remove();
+            $("#comments-count-" + response.post_id).text(response.comment_count);
+
+            if (!commentsList.children(".comment-item").length) {
+                commentsList.html('<p class="comments-empty">No comments yet.</p>');
+            }
+        }
+    });
+});
 function openNav() {
   document.getElementById("mySidenav").style.width = "250px";
   
@@ -677,7 +1155,77 @@ function closeNav() {
   document.getElementById("mySidenav").style.width = "0";
   
 }
+
+// 3-dot menu toggle
+$(document).on("click", ".three-dot-btn", function(e){
+    e.stopPropagation();
+    var postId = $(this).data("post-id");
+    $(".post-menu").not("#post-menu-" + postId).hide();
+    $("#post-menu-" + postId).toggle();
+});
+$(document).on("click", function(){ $(".post-menu").hide(); });
+
+// Delete post
+var deletePostId = null;
+$(document).on("click", ".delete-post-btn", function(e){
+    e.stopPropagation();
+    deletePostId = String($(this).data("post-id"));
+    $(".post-menu").hide();
+    new bootstrap.Modal(document.getElementById("deletePostModal")).show();
+});
+$(document).on("click", "#confirmDeleteBtn", function(){
+    if (!deletePostId) return;
+    var pid = deletePostId;
+    var modal = bootstrap.Modal.getInstance(document.getElementById("deletePostModal"));
+    if (modal) modal.hide();
+    $.ajax({
+        url: "/post/delete-post/" + pid + "/",
+        type: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        success: function(){
+            $(".post[data-post-id='" + pid + "']").fadeOut(300, function(){ $(this).remove(); });
+            deletePostId = null;
+        },
+        error: function(xhr){
+            alert("Error " + xhr.status + ": could not delete post.");
+        }
+    });
+});
+
+// Edit caption
+var editCaptionPostId = null;
+$(document).on("click", ".edit-caption-btn", function(e){
+    e.stopPropagation();
+    editCaptionPostId = $(this).data("post-id");
+    $("#editCaptionText").val($(this).data("caption"));
+    $(".post-menu").hide();
+    $("#editCaptionOverlay").addClass("open");
+});
+$(document).on("click", "#cancelEditBtn", function(e){
+    e.preventDefault();
+    $("#editCaptionOverlay").removeClass("open");
+    editCaptionPostId = null;
+});
+$(document).on("click", "#confirmEditCaptionBtn", function(e){
+    e.preventDefault();
+    if (!editCaptionPostId) return;
+    var newCaption = $("#editCaptionText").val().trim();
+    if (!newCaption) return;
+    var pid = editCaptionPostId;
+    $.ajax({
+        url: "/post/edit-caption/" + pid + "/",
+        type: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        data: { caption: newCaption },
+        success: function(response){
+            $(".post[data-post-id='" + String(pid) + "'] .caption-text").text(response.caption);
+            $(".edit-caption-btn[data-post-id='" + String(pid) + "']").data("caption", response.caption);
+            $("#editCaptionOverlay").removeClass("open");
+            editCaptionPostId = null;
+        }
+    });
+});
 </script>
    
 </body>
-</html> 
+</html>

@@ -38,79 +38,11 @@ class signup_view(View):
 
         if form.is_valid():
 
-            username = form.cleaned_data["username"]
-            email = form.cleaned_data["email"]
-            password = form.cleaned_data["password"]
-            phone_no = form.cleaned_data["phone_no"]
-            gender = form.cleaned_data["gender"]
-            if User.objects.filter(username=username).exists():
-
-                messages.error(
-                    request,
-                    "Username already exists."
-                )
-
-                return render(
-                    request,
-                    "useraccount/signup.html",
-                    {"form": form}
-                )
-            if username[0].isdigit() or username[0] in ('@', '/','-','+'):
-                messages.error(request,"Username should start with a character only")
-                return render(
-                    request,
-                    "useraccount/signup.html",
-                    {"form": form}
-                )
-            if password.isdigit() or len(password) < 8 :
-                messages.error(request,"enter password containing char,number and length greater than 8 char ")
-                return render(
-                    request,
-                    "useraccount/signup.html",
-                    {"form": form}
-                )
-            
-            if not phone_no or len(phone_no) != 10:
-                messages.error(request,"Please enter valid phone number of 10 digits")
-                return render(
-                    request,
-                    "useraccount/signup.html",
-                    {"form": form}
-                )
-            if not gender or gender not in('M', 'F', 'O'):
-                messages.error(request," Enter Gender. Only 'M', 'F', 'O' allowed ")
-                return render(
-                    request,
-                    "useraccount/signup.html",
-                    {"form": form}
-                )
-
-            if User.objects.filter(email=email).exists():
-
-                messages.error(
-                    request,
-                    "Email already exists."
-                )
-
-                return render(
-                    request,
-                    "useraccount/signup.html",
-                    {"form": form}
-                )
-
             user = form.save(commit=False)
-
-            user.set_password(
-                form.cleaned_data["password"]
-            )
-
+            user.set_password(form.cleaned_data["password"])
             user.save()
 
-            messages.success(
-                request,
-                "Account created successfully."
-            )
-
+            messages.success(request, "Account created successfully.")
             return redirect("login")
 
         return render(

@@ -15,8 +15,23 @@
         </ul>
         {% endif %}
         <form method="post"> 
-            {% csrf_token %} 
-            {{ form.as_p }} 
+            {% csrf_token %}
+            {% for field in form %}
+                <p>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <span style="color:red; font-size:13px; display:block;">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <p style="color:red; font-size:13px;">{{ error }}</p>
+                {% endfor %}
+            {% endif %}
             <button type="submit" style="width: 100%; padding: 10px; background: #c13584; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;"> 
                 Signup 
             </button> 

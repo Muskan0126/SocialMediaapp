@@ -1,31 +1,32 @@
 <div
     class="comment-item"
     data-comment-id="{{ comment.id }}"
-    style="
-        margin-left:{{ level }}px;
-        margin-top:5px;
-        color:#ddd;
-        background-color:black;
-    "
 >
 
-    <strong>
-        {{ comment.author.username }}
-    </strong>
+    <div class="comment-header">
+        <div class="comment-author-actions">
+            <strong>{{ comment.author.username }}</strong>
+            <span
+                class="reply-btn"
+                data-comment-id="{{ comment.id }}"
+                title="Reply"
+            >
+                &#8618;
+            </span>
+        </div>
+        {% if comment.author == request.user or comment.item.user == request.user %}
+        <button
+            type="button"
+            class="delete-comment-btn"
+            data-comment-id="{{ comment.id }}"
+            title="Delete comment"
+        >
+            Delete
+        </button>
+        {% endif %}
+    </div>
 
-    {{ comment.comment }}
-
-    <span
-        class="reply-btn"
-        data-comment-id="{{ comment.id }}"
-        style="
-            color:#4da6ff;
-            cursor:pointer;
-            margin-left:10px;
-        "
-    >
-        &#8618;
-    </span>
+    <span class="comment-text">{{ comment.comment }}</span>
 
     <div class="reply-form-container"></div>
 

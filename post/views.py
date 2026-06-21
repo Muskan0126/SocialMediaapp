@@ -41,7 +41,7 @@ class home_view(View, LoginRequiredMixin):
                 output_field=IntegerField()
             )
         ).order_by("is_me", "-created_at")
-        posts = Post.objects.select_related("user").all()
+        posts = Post.objects.select_related("user").order_by("-posted", "-id")
         liked_posts = Likes.objects.filter(user=request.user).values_list("post_id", flat=True)
         following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
         context = {
@@ -49,6 +49,8 @@ class home_view(View, LoginRequiredMixin):
             "posts": posts,
             "likes": liked_posts,
             "following_ids": following_ids,
+            "post_form": PostForm(),
+            "story_form": StoryForm(),
         }
         return render(
             request,
@@ -140,7 +142,7 @@ class create_story_view(View):
 
 class my_posts_view(View):
     def get(self,request):
-        posts = Post.objects.filter(user=request.user)
+        posts = Post.objects.filter(user=request.user).order_by("-posted", "-id")
         return render(
             request,
             "post/my_posts.html",
@@ -149,23 +151,25 @@ class my_posts_view(View):
             })
 
 class delete_post_view(View):
-    def get(self,request, post_id):
-        post = get_object_or_404(
-            Post,
-            id=post_id,
-            user=request.user
-        )
-
+    def post(self, request, post_id):
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "not authenticated"}, status=401)
+        post = get_object_or_404(Post, id=post_id, user=request.user)
         post.delete()
+        return JsonResponse({"success": True})
 
-        messages.success(
-            request,
-            "Post deleted successfully."
-        )
 
-        return redirect(
-            "home"
-        )
+class edit_caption_view(View):
+    def post(self, request, post_id):
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "not authenticated"}, status=401)
+        post = get_object_or_404(Post, id=post_id, user=request.user)
+        caption = request.POST.get("caption", "").strip()
+        if not caption:
+            return JsonResponse({"error": "Caption cannot be empty."}, status=400)
+        post.caption = caption
+        post.save()
+        return JsonResponse({"success": True, "caption": post.caption})
 
 
 
@@ -193,6 +197,7 @@ class profile_view(View):
             Post.objects
             .filter(user=request.user)
             .select_related("user")
+            .order_by("-posted", "-id")
         )
 
         paginator = Paginator(
@@ -368,7 +373,7 @@ class add_comment(View):
                 parent = None
                 if parent_id:
                     try:
-                        parent = Comment.objects.get(id=parent_id)
+                        parent = Comment.objects.get(id=parent_id, item=post)
                     except Comment.DoesNotExist:
                         pass
                 c = Comment.objects.create(
@@ -386,6 +391,26 @@ class add_comment(View):
                     "comment_count" : post.comments.count()
                 })
             return JsonResponse({"error": "invalid"}, status=400)
+
+
+class delete_comment_view(View):
+    def post(self, request, comment_id):
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "not authenticated"}, status=401)
+
+        comment = get_object_or_404(Comment, id=comment_id)
+        post = comment.item
+
+        if comment.author != request.user and post.user != request.user:
+            return JsonResponse({"error": "not allowed"}, status=403)
+
+        comment.delete()
+
+        return JsonResponse({
+            "success": True,
+            "post_id": post.id,
+            "comment_count": post.comments.count(),
+        })
 
 
 
