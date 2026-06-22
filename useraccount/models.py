@@ -3,13 +3,13 @@ from django.contrib.auth.models import AbstractUser
 from datetime import timedelta
 from django.utils import timezone
 # Create your models here.
-# user model to keep user information
+
 class User(AbstractUser):
     def user_directory_path(instance, filename):
         return 'userprofile_{0}/{1}'.format(instance.id, filename)
     
     bio = models.TextField()
-    email = models.EmailField( blank=False, null=False)
+    email = models.EmailField( blank=False, null=False, unique=True)
     gender = models.CharField(max_length=7, blank=True, null=True)
     country = models.CharField(max_length=30, blank=True, null = True)
     phone_no = models.CharField(blank=True,null = True)
