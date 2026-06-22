@@ -262,7 +262,7 @@ class edit_profile(View):
                 }
             )
     def post(self,request):
-
+        form = EditProfileForm
         form = EditProfileForm(
             instance=request.user
         )

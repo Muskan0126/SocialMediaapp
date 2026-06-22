@@ -16,8 +16,13 @@ a { color: #aaa; text-decoration: none; }
     <h2>Notifications</h2>
 
     {% for n in notifications %}
-        <div class="item">{{ n.notification_text }}</div>
-       
+        <div class="item">{{ n.notification_text }}
+            <div style="font-size: 10px">
+                {% load tz %}
+                {{n.date_created|timezone:"Asia/Kolkata"}}
+            </div>
+        </div>
+        
         <div style="display:flex; gap:10px; align-items:center;">
             
             <button

@@ -484,6 +484,13 @@ white-space:normal;
 .all-comment:not(:first-child) {
     margin-left: 4rem;
 }
+.bottom-links {
+   
+    margin-top: auto; 
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+}
 
 </style>
 </head>
@@ -492,19 +499,17 @@ white-space:normal;
 <div id="mySidenav" class="sidenav">
   <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
   <a href="{% url 'home' %}"> Home</a>
-  <a href="{% url 'notifications' %}">&#8506 Message</a>
+  <a href="{% url 'notifications' %}">&#8506 Notifications</a>
   <a href="{% url 'logout' %}">&#10149 Signout</a>
   <a href="{% url 'profile_view' %}"> &#9787 Profile</a>
-  <a href="{% url 'forgot_password' %}" style="background:none; border:none; color:red; cursor:pointer; font-size:16px; padding:0; text-align: center; margin-bottom: 2%;">
-    Reset Password
-  </a>
 
-  <form method="post" action="{% url 'delete_account' %}" style="display:inline;" onsubmit="return confirm('Are you sure? This will permanently delete your account, posts, and stories.');">
-    {% csrf_token %}
-    <button type="submit" style="background:none; border:none; color:red; cursor:pointer; font-size:16px; padding-bottom:0; margin-left:10px;margin-left: 28%; margin-top: 70%;">
-        Delete Account
-    </button>
-</form>
+    <a href="{% url 'forgot_password' %}"> &#9998 Reset Password </a> 
+    
+    <form method="post" action="{% url 'delete_account' %}" style="display:inline; width: 100%; margin-top: 75%" onsubmit="return confirm('Are you sure? This will permanently delete your account, posts, and stories.');"> 
+        {% csrf_token %} 
+        <button type="submit" style="background:none; border:none; color:red; cursor:pointer; font-size:16px; padding:0; text-align: center; width: 100%;margin-top: 75%"> Delete Account </button> 
+    </form> 
+</div>
 </div>
 
 <div id="main">
@@ -595,11 +600,14 @@ white-space:normal;
             {% else %}
             <img src="https://placehold.co/600x400" style="opacity:1; background-color: #f1f1f1;">
             {% endif %}
-          {% if post.user == request.user %}
-          <span><a href="{% url 'profile_view' %}">{{ post.user.username }}</a></span>
-          {% else %}
-          <span>{{ post.user.username }}</span>
-          {% endif %}
+          
+          <span>{{ post.user.username }}
+            <div style="font-size: 10px">
+                {% load tz %}
+{{ post.updated_at|timezone:"Asia/Kolkata" }}
+            </div>
+          </span>
+         
         </div>
           <div style="display:flex; gap:10px; align-items:center;">
             {% if post.user != request.user %}
@@ -1098,7 +1106,7 @@ $(document).on(
 
             '<span class="reply-btn" data-comment-id="' + response.id + '" title="Reply">&#8618;</span>' +
 
-            '</div>' +
+            '</div>' + 
 
             '<button type="button" class="delete-comment-btn" data-comment-id="' + response.id + '" title="Delete comment">Delete</button>' +
 

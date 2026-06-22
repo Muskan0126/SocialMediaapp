@@ -33,7 +33,8 @@ class signup_view(View):
         {"form": form}
     )
     def post(self,request):
-    
+       
+        form = SignupForm()
         form = SignupForm(request.POST)
 
         if form.is_valid():

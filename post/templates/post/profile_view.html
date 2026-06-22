@@ -102,6 +102,16 @@ text-decoration:none;
 .a:hover {
   color: #f1f1f1;
 }
+.post-caption{
+margin-top:10px;
+color:white;
+line-height:1.6;
+font-size:15px;
+inline-size: 600px;
+overflow-wrap: break-word;
+word-break:break-word;
+white-space:normal;
+}
 </style>
 
 </head>
@@ -169,18 +179,7 @@ href="{% url 'edit_profile' %}"
 >
 Edit Profile </a>
 
-<a 
-class="edit-btn"
-href="{% url 'forgot_password' %}"
->
-reset password </a>
 
-<form method="post" action="{% url 'delete_account' %}" style="display:inline;" onsubmit="return confirm('Are you sure? This will permanently delete your account, posts, and stories.');">
-    {% csrf_token %}
-    <button type="submit" style="background:none; border:none; color:red; cursor:pointer; font-size:16px; padding:0; margin-left:10px;">
-        Delete Account
-    </button>
-</form>
 <div class="bio">
 
   <p>{{ request.user.bio }}</p>
@@ -220,8 +219,9 @@ onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
             <strong>
             {{ post.user.username }}
             </strong>
-            
+            <div class = "post-caption">
             {{ post.caption }}
+            </div>
             </div>
             <button onclick="document.getElementById('postPopup_{{ post.id }}').close()" style="margin-top:10px;">Close</button>
             {% if post.user == request.user %}

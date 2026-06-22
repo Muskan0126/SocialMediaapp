@@ -26,7 +26,12 @@
         {% endif %}
     </div>
 
-    <span class="comment-text">{{ comment.comment }}</span>
+    <span class="comment-text">{{ comment.comment }}
+        <div style="font-size: 7px">
+            {% load tz %}
+{{ comment.date_commented|timezone:"Asia/Kolkata" }}
+        </div>
+    </span>
 
     <div class="reply-form-container"></div>
 
