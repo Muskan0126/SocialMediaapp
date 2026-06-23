@@ -81,10 +81,7 @@ class create_post_view(View):
             post = form.save(commit=False)
             post.user = request.user
             post.save()
-            messages.success(
-                request,
-                "Post uploaded successfully."
-            )
+            
             return redirect(
                 "home"
             )
@@ -123,11 +120,7 @@ class create_story_view(View):
 
             story.save()
 
-            messages.success(
-                request,
-                "Story uploaded successfully."
-            )
-
+           
             return redirect(
                 "home"
             )
@@ -183,10 +176,7 @@ class delete_story_view(View):
 
         story.delete()
 
-        messages.success(
-            request,
-            "Story deleted successfully."
-        )
+       
 
         return redirect("home")
 
@@ -321,7 +311,6 @@ class delete_account_view(View):
             user = request.user
             logout(request)
             user.delete()
-            messages.success(request, "Your account has been deleted.")
             return redirect("signup")
         return redirect("profile_view")
 

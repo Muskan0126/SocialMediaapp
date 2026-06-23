@@ -45,4 +45,5 @@ urlpatterns = [ path(
         home_view.as_view(),
         name="home"
     ),
+    
 ]

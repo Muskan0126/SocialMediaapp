@@ -2,7 +2,7 @@ from django import forms
 from .models import Post, Story, User
 import pdb
 from django.contrib.auth.hashers import check_password
-
+import re
 class PostForm(forms.ModelForm):
 
     class Meta:
@@ -38,7 +38,8 @@ class EditProfileForm(forms.ModelForm):
         username = self.cleaned_data.get("username")
         if not username:
             return username
-    
+        if not re.match(r'^[a-z][a-z0-9_]*$',username):
+            raise forms.ValidationError("Capital letters not allowed.")
         if User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("Username already exists.")
             

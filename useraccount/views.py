@@ -43,7 +43,7 @@ class signup_view(View):
             user.set_password(form.cleaned_data["password"])
             user.save()
 
-            messages.success(request, "Account created successfully.")
+           
             return redirect("login")
 
         return render(
@@ -98,10 +98,7 @@ def logout_view(request):
 
     logout(request)
 
-    messages.success(
-        request,
-        "Logged out successfully."
-    )
+   
 
     return redirect("login")
 

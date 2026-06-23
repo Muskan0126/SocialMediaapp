@@ -1,4 +1,56 @@
+{% load socialaccount %}
+<style>
+    .social-login{
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
 
+.social-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+
+    text-decoration:none;
+    color:#333;
+
+    background:white;
+
+    border:1px solid #ddd;
+
+    padding:12px;
+
+    border-radius:10px;
+
+    font-weight:600;
+
+    transition:0.3s;
+}
+
+.social-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+}
+
+.social-btn img{
+    width:22px;
+    height:22px;
+}
+
+.google:hover{
+    border-color:#db4437;
+}
+
+.github:hover{
+    border-color:#000;
+}
+
+.discord:hover{
+    border-color:#5865F2;
+}
+</style>
 <body style="background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d); min-height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; flex-direction: column; font-family: sans-serif;">
 
 
@@ -36,9 +88,24 @@
                 Signup 
             </button> 
         </form> 
-        <a href = "{% url 'google_login'%}">
-            sign in with google
-        </a>
+        <div class="social-login">
+
+    <a href="{% url 'google_login' %}" class="social-btn google">
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg">
+        Continue with Google
+    </a>
+
+    <a href="{% provider_login_url 'github' %}" class="social-btn github">
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg">
+        Continue with GitHub
+    </a>
+
+    <a href="{% provider_login_url 'discord' %}" class="social-btn discord">
+        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png">
+        Continue with Discord
+    </a>
+
+</div>
         <div style="margin-top: 15px;">
             <a href="{% url 'login' %}" style="color: #405de6; text-decoration: none;"> Login </a> 
         </div>

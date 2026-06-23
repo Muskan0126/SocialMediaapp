@@ -48,11 +48,13 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.google'
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
+    'allauth.socialaccount.providers.discord',
 ]
 
-AUTHENITCATION_BACKENDS = [
-    'django.contrib.auth.backends.ModalBackend',
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 MIDDLEWARE = [
@@ -100,8 +102,22 @@ SOCIALACCOUNT_PROVIDERS = {
         "SCOPE": [
             "email",
         ],
-    }
+    },
+    "github": {
+        "SCOPE": [
+            "user",
+            "user:email",
+        ],
+        "EMAIL_AUTHENTICATION": True,
+    },
+     "discord": {
+        "SCOPE": [
+            "identify",
+            "email",
+        ],
+    },
 }
+
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
