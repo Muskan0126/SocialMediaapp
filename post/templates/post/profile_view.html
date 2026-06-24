@@ -202,17 +202,16 @@ onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
                 <dialog id="postPopup_{{ post.id }}" style="border:none; border-radius:8px; padding:20px; background:#111; color:white;">
                   <img src="{{ post.picture.url }}" alt="Post Image" style="max-width:800px; max-height:800px; height:auto; display:block;">
                   <br>
-                  <div>
+                  
                   <div id="likes-count-{{ post.id }}">
                     {{ post.post_likes.count }}
                     Likes
+
+                    
                   </div>
               
-                  <div id="comments-count-{{ post.id }}">
-                    {{ post.comments.count }}
-                    &#8506
-                  </div>
-                  </div>
+                
+                
                 
                 
             <div>
@@ -225,18 +224,71 @@ onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
             </div>
             <button onclick="document.getElementById('postPopup_{{ post.id }}').close()" style="margin-top:10px;">Close</button>
             {% if post.user == request.user %}
-                  <a href="{% url 'delete_post' post.id %}" 
-                    class="d-block mt-2 small text-danger text-decoration-none"  
-                    style = "color:  red;"
-                    onclick="return confirm('Are you sure?');">
-
+            <button
+            type="button"
+            class="delete-post-btn"
+            onclick="document.getElementById('deleteConfirm{{ post.id }}').style.display='block'"
+            style="
+                background:none;
+                border:none;
+                color:red;
+                cursor:pointer;
+                margin-top:10px;
+            ">
+            Delete
+        </button>
+        <div
+                id="deleteConfirm{{ post.id }}"
+                style="
+                    display:none;
+                    margin-top:15px;
+                    padding:15px;
+                    border:1px solid #333;
+                    border-radius:8px;
+                    background:#1a1a1a;
+                ">
+            
+                <p style="margin-bottom:15px;">
+                    Are you sure you want to delete this post?
+                </p>
+            
+                <button
+                    type="button"
+                    onclick="document.getElementById('deleteConfirm{{ post.id }}').style.display='none'"
+                    style="
+                        padding:8px 15px;
+                        background:#444;
+                        color:white;
+                        border:none;
+                        border-radius:5px;
+                        cursor:pointer;
+                    ">
+                    Cancel
+                </button>
+            
+                <a
+                    href="{% url 'delete_post' post.id %}"
+                    style="
+                        padding:8px 15px;
+                        background:#e1306c;
+                        color:white;
+                        text-decoration:none;
+                        border-radius:5px;
+                        margin-left:10px;
+                    ">
                     Delete
-                  </a>
+                </a>
+            
+            </div>
+        
                   {% endif %}
+                 
                 </dialog>
+                
 {% endfor %}
 
 </div>
+
 
 <div class="pagination">
 

@@ -377,7 +377,8 @@ class add_comment(View):
                     "author": request.user.username,
                     "comment": text,
                     "parent_id": parent_id or None,
-                    "comment_count" : post.comments.count()
+                    "comment_count" : post.comments.count(),
+                    "date_commented" : c.date_commented,
                 })
             return JsonResponse({"error": "invalid"}, status=400)
 
