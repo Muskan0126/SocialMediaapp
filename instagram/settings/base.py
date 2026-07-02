@@ -38,9 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'useraccount',
-    'post.apps.PostConfig',
-    'directs',
+    'apps.useraccount',
+    'apps.post.apps.PostConfig',
+    'apps.directs',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -66,7 +66,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'useraccount.test_middleware.RequestLoggingMiddleware',
+    'apps.useraccount.test_middleware.RequestLoggingMiddleware',
     
 ]
 

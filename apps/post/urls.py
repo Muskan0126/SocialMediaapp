@@ -1,6 +1,6 @@
 from django.urls import path
 
-from useraccount.views import forgot_password_view
+from apps.useraccount.views import forgot_password_view
 
 from .views import (
     edit_profile,

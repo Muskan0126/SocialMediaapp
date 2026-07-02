@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 
 class PostConfig(AppConfig):
-    name = 'post'
+    name = 'apps.post'
 
     def ready(self):
-        import post.signals  # noqa
+        import apps.post.signals  # noqa

@@ -1,0 +1,12 @@
+Django
+psycopg2-binary
+Pillow
+
+djangorestframework
+djangorestframework-simplejwt
+
+django-allauth
+
+python-dotenv
+
+requests
