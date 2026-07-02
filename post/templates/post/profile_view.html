@@ -194,7 +194,7 @@ Edit Profile </a>
 <div class="posts-grid">
 
 {% for post in page_obj %}
-
+<div class="profile-post" data-post-id="{{ post.id }}"></div>
 <img src="{{ post.picture.url }}"
 onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
                 style="cursor:pointer;">
@@ -266,18 +266,22 @@ onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
                     Cancel
                 </button>
             
-                <a
-                    href="{% url 'delete_post' post.id %}"
-                    style="
-                        padding:8px 15px;
-                        background:#e1306c;
-                        color:white;
-                        text-decoration:none;
-                        border-radius:5px;
-                        margin-left:10px;
-                    ">
-                    Delete
-                </a>
+                <button
+    type="button"
+    class="confirm-delete-btn"
+    data-post-id="{{ post.id }}"
+    style="
+        padding:8px 15px;
+        background:#e1306c;
+        color:white;
+        border:none;
+        border-radius:5px;
+        margin-left:10px;
+        cursor:pointer;
+    "
+>
+    Delete
+</button>
             
             </div>
         
@@ -321,6 +325,39 @@ Next
 </div>
 
 </div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
+<script>
+
+$(document).on("click", ".confirm-delete-btn", function(){
+
+    var postId = $(this).data("post-id");
+
+    $.ajax({
+
+        url: "/post/delete-post/" + postId + "/",
+
+        type: "POST",
+
+        headers:{
+            "X-CSRFToken":"{{ csrf_token }}"
+        },
+
+        success:function(){
+
+    document
+        .getElementById("postPopup_" + postId)
+        .close();
+
+    $("img[onclick*='postPopup_" + postId + "']")
+        .remove();
+
+}
+
+    });
+
+});
+
+</script>
 </body>
 </html>
