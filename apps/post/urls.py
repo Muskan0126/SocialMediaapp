@@ -2,7 +2,7 @@ from django.urls import path
 
 from apps.useraccount.views import forgot_password_view
 
-from .views import (
+from apps.post.views import (
     edit_profile,
     home_view,
     create_post_view,
