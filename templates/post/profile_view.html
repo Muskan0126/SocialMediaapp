@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Profile</title>
+
+<style>
+
+body{
+background:#000;
+color:white;
+font-family:Arial,sans-serif;
+margin:0;
+padding:0;
+}
+
+.container{
+width:80%;
+margin:auto;
+margin-top:40px;
+}
+
+.profile-header{
+display:flex;
+align-items:center;
+gap:60px;
+padding-bottom:30px;
+border-bottom:1px solid #333;
+}
+
+.profile-pic{
+width:160px;
+height:160px;
+border-radius:50%;
+object-fit:cover;
+border:3px solid hotpink;
+}
+
+.profile-info h1{
+margin-bottom:15px;
+}
+
+.stats{
+display:flex;
+gap:40px;
+margin:20px 0;
+}
+
+.stats span{
+font-size:18px;
+}
+
+.bio{
+margin-top:15px;
+inline-size: 600px;
+overflow-wrap: break-word;
+word-break:break-word;
+white-space:normal;
+}
+
+.edit-btn{
+
+padding:10px 20px 10px;
+background:#262626;
+color:white;
+text-decoration:none;
+border-radius:8px;
+gap : 40px;
+}
+
+.posts-grid{
+margin-top:40px;
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+}
+
+.posts-grid img{
+width:100%;
+height:300px;
+object-fit:cover;
+}
+
+.pagination{
+text-align:center;
+margin-top:30px;
+}
+
+.pagination a{
+color:white;
+padding:10px;
+text-decoration:none;
+}
+.a {
+  padding: 20px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+.a:hover {
+  color: #f1f1f1;
+}
+.post-caption{
+margin-top:10px;
+color:white;
+line-height:1.6;
+font-size:15px;
+inline-size: 600px;
+overflow-wrap: break-word;
+word-break:break-word;
+white-space:normal;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+    
+    <a href="{% url 'home' %}"  
+    style="
+        margin-top:15px;
+        font-size:20px;
+        color:rgb(248, 242, 242);
+        float: right;
+        
+        "> 🏠 </a>
+  
+<div class="profile-header">
+  {% if request.user.profile_photo %}
+  <img
+  class="profile-pic"
+  src="{{ request.user.profile_photo.url }}"
+
+  >
+  {% else %}
+
+        <img
+            src="https://via.placeholder.com/120"
+    
+        >
+
+    {% endif %}
+
+    
+<div class="profile-info">
+
+<h1>{{ request.user.username }}</h1>
+
+<div class="stats">
+
+<span>
+<strong>{{ posts_count }}</strong>
+Posts
+</span>
+
+<span>
+<strong>{{ followers_count }}</strong>
+Followers
+</span>
+
+<span>
+<strong>{{ following_count }}</strong>
+Following
+</span>
+
+</div>
+
+
+
+<br>
+
+<a
+class="edit-btn"
+href="{% url 'edit_profile' %}"
+
+>
+Edit Profile </a>
+
+
+<div class="bio">
+
+  <p>{{ request.user.bio }}</p>
+  
+  
+  
+  </div>
+</div>
+
+</div>
+
+<div class="posts-grid">
+
+{% for post in page_obj %}
+<div class="profile-post" data-post-id="{{ post.id }}"></div>
+<img src="{{ post.picture.url }}"
+onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
+                style="cursor:pointer;">
+
+                <dialog id="postPopup_{{ post.id }}" style="border:none; border-radius:8px; padding:20px; background:#111; color:white;">
+                  <img src="{{ post.picture.url }}" alt="Post Image" style="max-width:800px; max-height:800px; height:auto; display:block;">
+                  <br>
+                  
+                  <div id="likes-count-{{ post.id }}">
+                    {{ post.post_likes.count }}
+                    Likes
+
+                    
+                  </div>
+              
+                
+                
+                
+                
+            <div>
+            <strong>
+            {{ post.user.username }}
+            </strong>
+            <div class = "post-caption">
+            {{ post.caption }}
+            </div>
+            </div>
+            <button onclick="document.getElementById('postPopup_{{ post.id }}').close()" style="margin-top:10px;">Close</button>
+            {% if post.user == request.user %}
+            <button
+            type="button"
+            class="delete-post-btn"
+            onclick="document.getElementById('deleteConfirm{{ post.id }}').style.display='block'"
+            style="
+                background:none;
+                border:none;
+                color:red;
+                cursor:pointer;
+                margin-top:10px;
+            ">
+            Delete
+        </button>
+        <div
+                id="deleteConfirm{{ post.id }}"
+                style="
+                    display:none;
+                    margin-top:15px;
+                    padding:15px;
+                    border:1px solid #333;
+                    border-radius:8px;
+                    background:#1a1a1a;
+                ">
+            
+                <p style="margin-bottom:15px;">
+                    Are you sure you want to delete this post?
+                </p>
+            
+                <button
+                    type="button"
+                    onclick="document.getElementById('deleteConfirm{{ post.id }}').style.display='none'"
+                    style="
+                        padding:8px 15px;
+                        background:#444;
+                        color:white;
+                        border:none;
+                        border-radius:5px;
+                        cursor:pointer;
+                    ">
+                    Cancel
+                </button>
+            
+                <button
+    type="button"
+    class="confirm-delete-btn"
+    data-post-id="{{ post.id }}"
+    style="
+        padding:8px 15px;
+        background:#e1306c;
+        color:white;
+        border:none;
+        border-radius:5px;
+        margin-left:10px;
+        cursor:pointer;
+    "
+>
+    Delete
+</button>
+            
+            </div>
+        
+                  {% endif %}
+                 
+                </dialog>
+                
+{% endfor %}
+
+</div>
+
+
+<div class="pagination">
+
+{% if page_obj.has_previous %}
+
+
+<a href="?page={{ page_obj.previous_page_number }}">
+Previous
+</a>
+
+{% endif %}
+
+<span>
+
+Page {{ page_obj.number }}
+of
+{{ page_obj.paginator.num_pages }}
+
+</span>
+
+{% if page_obj.has_next %}
+
+<a href="?page={{ page_obj.next_page_number }}">
+Next
+</a>
+
+
+{% endif %}
+
+</div>
+
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script>
+
+$(document).on("click", ".confirm-delete-btn", function(){
+
+    var postId = $(this).data("post-id");
+
+    $.ajax({
+
+        url: "/post/delete-post/" + postId + "/",
+
+        type: "POST",
+
+        headers:{
+            "X-CSRFToken":"{{ csrf_token }}"
+        },
+
+        success:function(){
+
+    document
+        .getElementById("postPopup_" + postId)
+        .close();
+
+    $("img[onclick*='postPopup_" + postId + "']")
+        .remove();
+
+}
+
+    });
+
+});
+
+</script>
+</body>
+</html>
