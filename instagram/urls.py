@@ -24,6 +24,8 @@ urlpatterns = [
     path('', include("apps.useraccount.urls")),
     path('accounts/', include('allauth.urls')),
     path('post/', include("apps.post.urls")),
+    path("api/accounts/", include("apps.useraccount.api.urls")),
+    path("api/posts/", include("apps.post.api.urls")),
 ]
 if settings.DEBUG:
     urlpatterns += static(
