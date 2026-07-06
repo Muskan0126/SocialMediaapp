@@ -1,14 +1,15 @@
+import random
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .serializers import ProfileSerializer, RegisterSerializer, UpdateProfileSerializer
+from .serializers import ForgotPasswordSerializer, ProfileSerializer, RegisterSerializer, UpdateProfileSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import LoginSerializer
 from django.shortcuts import get_object_or_404
 from apps.post.models import Follow
-from apps.useraccount.models import User
-
+from apps.useraccount.models import User, otp
+from django.core.mail import send_mail
 class RegisterAPIView(APIView):
 # /api/accounts/register/
 
@@ -144,3 +145,92 @@ class UpdateProfileAPIView(APIView):
             return Response(serializer.data)
 
         return Response(serializer.errors)
+    
+
+class LogoutView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response(
+                {"error": "Refresh token is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(
+                {"message": "Logout successful"},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception:
+            return Response(
+                {"error": "Invalid token"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class ForgotPasswordView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(
+            data=request.data
+        )
+
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        email = serializer.validated_data["email"]
+
+        otp_text = str(
+            random.randint(
+                100000,
+                999999
+            )
+        )
+
+        otp.objects.filter(
+            email__email=email
+        ).delete()
+
+        try:
+            # 1. Look up the User object using the email string
+            user_instance = User.objects.get(email=email)
+            
+            # 2. Pass the actual User object to the ForeignKey field
+            otp.objects.create(email=user_instance, otp=otp_text)
+
+        except User.DoesNotExist:
+            # Handle the error if the user does not exist in the system
+            return Response(
+            {"error": "No user account found with this email address."}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+        send_mail(
+            subject="Password Reset OTP",
+            message=f"Your OTP is {otp_text}. Valid for 10 minutes.",
+            from_email=None,
+            recipient_list=[email],
+            fail_silently=False
+        )
+
+        return Response(
+            {
+                "message":
+                "OTP sent successfully"
+            },
+            status=status.HTTP_200_OK
+        )
+    

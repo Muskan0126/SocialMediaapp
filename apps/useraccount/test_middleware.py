@@ -6,4 +6,3 @@ class RequestLoggingMiddleware:
     
         response = self.get_response(request)
         return response
- 
