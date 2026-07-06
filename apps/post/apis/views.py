@@ -25,12 +25,15 @@ class CreatePostAPIView(APIView):
             serializer.save(
                 user=request.user
             )
-
+            post = serializer.save(user=request.user)
             return Response(
 
                 {
                     "message": "Post created successfully.",
-                    "data": serializer.data
+                    "data": {
+                        "id": post.id,
+                        **serializer.data
+                    }
                 },
 
                 status=status.HTTP_201_CREATED
@@ -101,7 +104,7 @@ class CreateStoryAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-
+        
         serializer = CreateStorySerializer(
             data=request.data
         )
@@ -111,12 +114,15 @@ class CreateStoryAPIView(APIView):
             serializer.save(
                 user=request.user
             )
-
+            story = serializer.save(user=request.user)
             return Response(
 
                 {
                     "message": "Story created successfully.",
-                    "data": serializer.data
+                    "data": {
+                        "id": story.id,
+                        **serializer.data
+                    }
                 },
 
                 status=status.HTTP_201_CREATED

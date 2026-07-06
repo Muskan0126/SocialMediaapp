@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
+from apps.common.validators import validate_image
+from apps.common.validators import validate_image
 from apps.post.models import Follow, Post
 import re
 
@@ -181,7 +183,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         ).count()
     
 class UpdateProfileSerializer(serializers.ModelSerializer):
-
+    profile_photo = serializers.ImageField(
+        validators=[validate_image],
+        required=False
+    )
     class Meta:
         model = User
         fields = [

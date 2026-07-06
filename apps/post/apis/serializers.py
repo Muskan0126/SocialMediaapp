@@ -1,11 +1,14 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
+from apps.common.validators import validate_image
 from apps.post.models import Comment, Follow, Post, Story
 import re
 
 class CreatePostSerializer(serializers.ModelSerializer):
-
+    picture = serializers.ImageField(
+        validators=[validate_image]
+    )
     class Meta:
         model = Post
         fields = [
@@ -78,7 +81,9 @@ class UpdatePostSerializer(serializers.ModelSerializer):
         return value
     
 class CreateStorySerializer(serializers.ModelSerializer):
-
+    image = serializers.ImageField(
+        validators=[validate_image]
+    )
     class Meta:
         model = Story
         fields = [
