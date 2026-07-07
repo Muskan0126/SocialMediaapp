@@ -10,9 +10,10 @@ from django.shortcuts import get_object_or_404
 from apps.post.models import Follow
 from apps.useraccount.models import User, otp
 from django.core.mail import send_mail
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 class RegisterAPIView(APIView):
 # /api/accounts/register/
-
+    serializer_class = RegisterSerializer
     def post(self, request):
 
         serializer = RegisterSerializer(
@@ -43,6 +44,7 @@ class LoginAPIView(APIView):
         "username": "muskan",
         "password": "Test@123"
     }'''
+    serializer_class = LoginSerializer 
     authentication_classes = []
 
     permission_classes = []
@@ -97,7 +99,19 @@ class LoginAPIView(APIView):
 class ProfileAPIView(APIView):
 # /api/accounts/profile/id=1
     permission_classes = [IsAuthenticated]
-
+    serializer_class = ProfileSerializer
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="id",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="User ID",
+            )
+        ],
+        responses=ProfileSerializer,
+    )
     def get(self, request):
 
         id = request.query_params.get("id")
@@ -131,7 +145,7 @@ class ProfileAPIView(APIView):
 class UpdateProfileAPIView(APIView):
 #/api/accounts/update-profile/
     permission_classes = [IsAuthenticated]
-
+    serializer_class = UpdateProfileSerializer
     def patch(self, request):
 
         serializer = UpdateProfileSerializer(
@@ -179,7 +193,7 @@ class LogoutView(APIView):
 class ForgotPasswordView(APIView):
 
     permission_classes = [IsAuthenticated]
-
+    serializer_class = ForgotPasswordSerializer
     def post(self, request):
         serializer = ForgotPasswordSerializer(
             data=request.data

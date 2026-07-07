@@ -9,9 +9,7 @@ class RequestLoggingMiddleware:
     
         response = self.get_response(request)
         return response
-    
-
-
+ 
 class SystemInfoMiddleware:
 
     def __init__(self, get_response):
@@ -37,5 +35,4 @@ class SystemInfoMiddleware:
         print("======================================\n")
 
         response = self.get_response(request)
-
         return response

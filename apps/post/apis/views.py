@@ -13,7 +13,7 @@ from apps.useraccount.models import User
 class CreatePostAPIView(APIView):
 # /api/posts/create/
     permission_classes = [IsAuthenticated]
-
+    serializer_class = CreatePostSerializer
     def post(self, request):
 
         serializer = CreatePostSerializer(
@@ -47,6 +47,7 @@ class CreatePostAPIView(APIView):
     
 class PostListAPIView(APIView):
     # api/posts/
+    serializer_class = PostListSerializer
     def get(self,request):
   
         queryset = (
@@ -61,7 +62,7 @@ class PostListAPIView(APIView):
 class UpdatePostAPIView(APIView):
 #/api/posts/post-update/27/
     permission_classes = [IsAuthenticated]
-
+    serializer_class = UpdatePostSerializer
     def patch(self, request,pk):
         post = get_object_or_404(Post, id=pk)
         
@@ -102,7 +103,7 @@ class DeletePostAPIView(APIView):
 class CreateStoryAPIView(APIView):
 # /api/posts/story-create/
     permission_classes = [IsAuthenticated]
-
+    serializer_class = CreateStorySerializer
     def post(self, request):
         
         serializer = CreateStorySerializer(
@@ -257,7 +258,7 @@ class DeleteStoryAPIView(APIView):
 class CommentAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
-
+    serializer_class = CommentSerializer
     def post(self, request, post_id):
 
         post = get_object_or_404(
