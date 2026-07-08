@@ -148,3 +148,164 @@ class AuthenticatedViewsTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["error"], "Refresh token is required")
 
+
+class LoginViewTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.user = User.objects.create_user(
+            username="muskan",
+            email="muskan@gmail.com",
+            password="Password123!"
+        )
+
+        self.url = reverse("login")
+
+    def test_login_get(self):
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_login_success(self):
+
+        response = self.client.post(
+            self.url,
+            {
+                "username": "muskan",
+                "password": "Password123!"
+            }
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_login_invalid(self):
+
+        response = self.client.post(
+            self.url,
+            {
+                "username": "muskan",
+                "password": "wrongpassword"
+            }
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+class LogoutViewTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.user = User.objects.create_user(
+            username="muskan",
+            password="Password123!"
+        )
+
+        self.client.login(
+            username="muskan",
+            password="Password123!"
+        )
+
+        self.url = reverse("logout")
+
+    def test_logout(self):
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 302)
+
+class ForgotPasswordViewTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.user = User.objects.create_user(
+            username="muskan",
+            email="muskan@gmail.com",
+            password="Password123!"
+        )
+
+        self.url = reverse("forgot_password")
+
+    def test_get(self):
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_valid_email(self):
+
+        response = self.client.post(
+            self.url,
+            {
+                "email": "muskan@gmail.com"
+            }
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        self.assertTrue(
+            otp.objects.filter(email=self.user).exists()
+        )
+
+    def test_invalid_email(self):
+
+        response = self.client.post(
+            self.url,
+            {
+                "email": "abc@gmail.com"
+            }
+        )
+
+        self.assertEqual(response.status_code, 200)
+    
+class ResetPasswordViewTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.user = User.objects.create_user(
+            username="muskan",
+            email="muskan@gmail.com",
+            password="Password123!"
+        )
+
+        self.url = reverse("reset_password")
+
+        session = self.client.session
+        session["reset_email"] = "muskan@gmail.com"
+        session.save()
+
+        otp.objects.create(
+            email=self.user,
+            otp="123456"
+        )
+
+    def test_get(self):
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_reset_success(self):
+
+        response = self.client.post(
+            self.url,
+            {
+                "otp": "123456",
+                "new_password": "NewPassword123!",
+                "confirm_password": "NewPassword123!"
+            }
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_wrong_otp(self):
+
+        response = self.client.post(
+            self.url,
+            {
+                "otp": "999999",
+                "new_password": "NewPassword123!",
+                "confirm_password": "NewPassword123!"
+            }
+        )
+
+        self.assertEqual(response.status_code, 200)
