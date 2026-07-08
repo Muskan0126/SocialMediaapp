@@ -51,8 +51,8 @@ font-size:18px;
 }
 
 .bio{
-margin-top:15px;
-inline-size: 600px;
+max-width:600px;
+width:100%;
 overflow-wrap: break-word;
 word-break:break-word;
 white-space:normal;
@@ -69,12 +69,17 @@ gap : 40px;
 }
 
 .posts-grid{
-margin-top:40px;
 display:grid;
 grid-template-columns:repeat(3,1fr);
-gap:10px;
-}
-
+gap:10px;}
+@media(max-width:992px){
+.posts-grid{
+grid-template-columns:repeat(2,1fr);
+}}
+@media(max-width:576px){
+.posts-grid{
+grid-template-columns:1fr;
+}}
 .posts-grid img{
 width:100%;
 height:300px;
@@ -194,11 +199,11 @@ Edit Profile </a>
 <div class="posts-grid">
 
 {% for post in page_obj %}
-<div class="profile-post" data-post-id="{{ post.id }}"></div>
+<div class="profile-post" data-post-id="{{ post.id }}">
 <img src="{{ post.picture.url }}"
 onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
                 style="cursor:pointer;">
-
+</div>
                 <dialog id="postPopup_{{ post.id }}" style="border:none; border-radius:8px; padding:20px; background:#111; color:white;">
                   <img src="{{ post.picture.url }}" alt="Post Image" style="max-width:800px; max-height:800px; height:auto; display:block;">
                   <br>
