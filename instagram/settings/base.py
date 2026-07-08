@@ -62,7 +62,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.useraccount.test_middleware.RequestLoggingMiddleware",
-    "apps.useraccount.test_middleware.SystemInfoMiddleware",
+    # "apps.useraccount.test_middleware.SystemInfoMiddleware",
     "django.middleware.common.BrokenLinkEmailsMiddleware",
 ]
 

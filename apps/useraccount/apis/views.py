@@ -93,9 +93,6 @@ class LoginAPIView(APIView):
             status=status.HTTP_400_BAD_REQUEST
 
         )
-    
-
-
 class ProfileAPIView(APIView):
 # /api/accounts/profile/id=1
     permission_classes = [IsAuthenticated]

@@ -12,3 +12,4 @@ python-dotenv
 requests
 drf-spectacular
 user_agents
+pytest
