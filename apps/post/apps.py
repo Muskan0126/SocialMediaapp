@@ -5,4 +5,4 @@ class PostConfig(AppConfig):
     name = 'apps.post'
 
     def ready(self):
-        import apps.post.signals  # noqa
+        import apps.post.signals  
