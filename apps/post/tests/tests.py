@@ -1,8 +1,10 @@
 from django import middleware
+from rest_framework.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from django.test import Client, RequestFactory
-from apps.post.models import Notification, Post, Story, Likes, Follow, Comment
+from apps.common.validators import validate_image
+from apps.post.models import Notification, Post, Story, Likes, Follow, Comment, Stream
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -345,8 +347,199 @@ class PostModelTest(APITestCase):
             username="test",
             password="Password123!"
         )
+    def test_user_follow_method(self):
 
+        other = User.objects.create_user(
+    username="other2",
+    email="other2@gmail.com",
+    password="Password123!"
+)
+    
 
+        follow = Follow.objects.create(
+            follower=self.user,
+            following=other
+        )
+
+        Follow.user_follow(
+            sender=Follow,
+            instance=follow
+        )
+
+        self.assertTrue(
+            Notification.objects.filter(
+                sender=self.user,
+                receiver=other,
+                notification_type=3
+            ).exists()
+        )
+    def test_stream_add_post(self):
+
+        follower = User.objects.create_user(
+            username="follower",
+            email="follower@gmail.com",
+            password="Password123!"
+        )
+
+        Follow.objects.create(
+            follower=follower,
+            following=self.user
+        )
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="Hello"
+        )
+
+        Stream.add_post(
+            sender=Post,
+            instance=post
+        )
+
+        self.assertEqual(
+            Stream.objects.count(),
+            1
+        )
+
+        stream = Stream.objects.first()
+
+        self.assertEqual(stream.user, follower)
+        self.assertEqual(stream.post, post)
+        self.assertEqual(stream.following, self.user)
+    def test_story_string(self):
+
+        story = Story.objects.create(
+            user=self.user,
+            image="story.jpg"
+        )
+
+        self.assertEqual(
+            str(story),
+            f"{self.user.username} Story"
+        )
+    def test_user_unfollow_method(self):
+
+        other = User.objects.create_user(
+        username="other",
+        email="other@gmail.com",
+        password="Password123!"
+)
+
+        Notification.objects.create(
+            id="1",
+            sender=self.user,
+            receiver=other,
+            notification_type=3,
+            notification_text="Follow"
+        )
+
+        follow = Follow.objects.create(
+            follower=self.user,
+            following=other
+        )
+
+        Follow.user_unfollow(
+            sender=Follow,
+            instance=follow
+        )
+
+        self.assertFalse(
+            Notification.objects.filter(
+                sender=self.user,
+                receiver=other,
+                notification_type=3
+            ).exists()
+        )
+    def test_user_liked_post_method(self):
+        post = Post.objects.create(
+            user=self.user,
+            caption="Test"
+        )
+
+        like = Likes.objects.create(
+            user=self.user,
+            post=post
+        )
+
+        Likes.user_liked_post(
+            sender=Likes,
+            instance=like
+        )
+    def test_user_unliked_post_method(self):
+        post = Post.objects.create(
+            user=self.user,
+            caption="Test"
+        )
+
+        like = Likes.objects.create(
+            user=self.user,
+            post=post
+        )
+
+        Likes.user_unliked_post(
+            sender=Likes,
+            instance=like
+        )
+    def test_comment_string(self):
+        post = Post.objects.create(
+            user=self.user,
+            caption="Hello"
+        )
+
+        comment = Comment.objects.create(
+            id="1",
+            item=post,
+            author=self.user,
+            comment="Nice"
+        )
+
+        self.assertEqual(
+            str(comment),
+            str(post)
+        )
+    def test_notification_string(self):
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="Hello"
+        )
+
+        notification = Notification.objects.create(
+            id="1",
+            post=post,
+            comment=None,
+            sender=self.user,
+            receiver=self.user,
+            notification_type=1,
+            notification_text="Liked"
+        )
+
+        self.assertEqual(
+            str(notification),
+            "1"
+        )
+
+    def test_notification_string(self):
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="Hello"
+        )
+
+        notification = Notification.objects.create(
+            id="1",
+            post=post,
+            comment=None,
+            sender=self.user,
+            receiver=self.user,
+            notification_type=1,
+            notification_text="Liked"
+        )
+
+        self.assertEqual(
+            str(notification),
+            "1"
+        )
     def test_post_string(self):
 
         post = Post.objects.create(
@@ -911,7 +1104,156 @@ class PostViewsTestCase(APITestCase):
             response.status_code,
             200
         )
+    def test_delete_post_without_login(self):
 
+        self.client.logout()
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+        response = self.client.post(
+            reverse("delete_post", args=[post.id])
+        )
+
+        self.assertEqual(response.status_code, 401)
+    def test_edit_caption_empty(self):
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+        response = self.client.post(
+            reverse("edit_caption", args=[post.id]),
+            {"caption": ""}
+        )
+        self.assertEqual(response.status_code, 400)
+    def test_profile_counts(self):
+
+        Follow.objects.create(
+            follower=self.user2,
+            following=self.user
+        )
+
+        for i in range(12):
+            Post.objects.create(
+                user=self.user,
+                caption=f"post{i}",
+                picture=self.get_temporary_image()
+            )
+
+        response = self.client.get(reverse("profile_view"))
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.context["followers_count"],
+            1
+        )
+        self.assertEqual(
+            response.context["posts_count"],
+            12
+        )
+    def test_delete_account_get(self):
+
+        response = self.client.get(
+            reverse("delete_account")
+        )
+        self.assertEqual(response.status_code, 405)
+    def test_reply_comment(self):
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+        parent = Comment.objects.create(
+            id="123",
+            author=self.user,
+            item=post,
+            comment="Parent"
+        )
+
+        response = self.client.post(
+            reverse("add_comment", args=[post.id]),
+            {
+                "comment": "Reply",
+                "parent_id": parent.id
+            }
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            Comment.objects.count(),
+            2
+        )
+
+        reply = Comment.objects.exclude(id=parent.id).first()
+
+        self.assertEqual(
+            reply.parent,
+            parent
+        )
+    def test_like_post_json(self):
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+        response = self.client.post(
+            reverse("like_post", args=[post.id])
+        )
+
+        self.assertTrue(response.json()["liked"])
+        self.assertEqual(response.json()["likes_count"], 1)
+    def test_unlike_post_json(self):
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+        Likes.objects.create(
+            user=self.user,
+            post=post
+        )
+
+        response = self.client.post(
+            reverse("like_post", args=[post.id])
+        )
+
+        self.assertFalse(response.json()["liked"])
+        self.assertEqual(response.json()["likes_count"], 0)
+    def test_follow_json(self):
+
+        response = self.client.post(
+            reverse("follow_user", args=[self.user2.id])
+        )
+
+        self.assertTrue(response.json()["following"])
+        self.assertEqual(response.json()["followers_count"], 1)
+    def test_unfollow_json(self):
+
+        Follow.objects.create(
+            follower=self.user,
+            following=self.user2
+        )
+
+        response = self.client.post(
+            reverse("follow_user", args=[self.user2.id])
+        )
+
+        self.assertFalse(response.json()["following"])
+        self.assertEqual(response.json()["followers_count"], 0)
 class PostFormsTestCase(APITestCase):
 
     def setUp(self):
@@ -1238,3 +1580,15 @@ class SystemInfoMiddlewareTestCase(APITestCase):
             response.status_code,
             200
         )
+class ValidatorTestCase(APITestCase):
+
+    def test_invalid_image_extension(self):
+
+        file = SimpleUploadedFile(
+            "image.gif",
+            b"dummy content",
+            content_type="image/gif"
+        )
+
+        with self.assertRaises(ValidationError):
+            validate_image(file)

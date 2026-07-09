@@ -1,6 +1,10 @@
+from datetime import timedelta
+from django.utils import timezone
+
 from django.test import SimpleTestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from apps.common.validators import validate_image
 from apps.useraccount.forms import ForgotPasswordForm, LoginForm, ResetPasswordForm, SignupForm
 from apps.useraccount.utils import generate_otp
 from rest_framework import status
@@ -325,7 +329,30 @@ class SignupFormTestCase(APITestCase):
             gender="M"
         )
 
+    def test_signup_form_invalid_password(self):
 
+        form = SignupForm(data={
+            "username": "testuser",
+            "email": "test@gmail.com",
+            "password": "1234567",      # less than 8 chars and only digits
+            "phone_no": "9876543210",
+            "gender": "M",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("password", form.errors)
+    def test_signup_form_invalid_phone(self):
+
+        form = SignupForm(data={
+            "username": "testuser",
+            "email": "test@gmail.com",
+            "password": "Password123",
+            "phone_no": "12345",        # invalid
+            "gender": "M",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("phone_no", form.errors)
     def valid_data(self):
 
         return {
@@ -507,6 +534,7 @@ class SignupFormTestCase(APITestCase):
             "phone_no",
             form.errors
         )
+    
 
 
 
@@ -632,3 +660,286 @@ class GenerateOTPTestCase(SimpleTestCase):
         self.assertEqual(len(otp2), 6)
         self.assertTrue(otp1.isdigit())
         self.assertTrue(otp2.isdigit())
+class SerializerValidationTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.user = User.objects.create_user(
+            username="existinguser",
+            email="existing@gmail.com",
+            phone_no="9876543210",
+            password="Password123!",
+            gender="M"
+        )
+
+        self.refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.refresh.access_token}"
+        )
+
+        self.register_url = reverse("register-api")
+        self.update_url = reverse("update-profile-api")
+        self.forgot_url = reverse("forgot-password")
+
+    def test_register_username_capital(self):
+
+        response = self.client.post(
+            self.register_url,
+            {
+                "username": "Muskan",
+                "email": "abc@gmail.com",
+                "password": "Password123!",
+                "confirm_password": "Password123!"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_register_duplicate_username(self):
+
+        response = self.client.post(
+            self.register_url,
+            {
+                "username": "existinguser",
+                "email": "new@gmail.com",
+                "password": "Password123!",
+                "confirm_password": "Password123!"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+    def test_register_duplicate_email(self):
+
+        response = self.client.post(
+            self.register_url,
+            {
+                "username": "newuser",
+                "email": "existing@gmail.com",
+                "password": "Password123!",
+                "confirm_password": "Password123!"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+    def test_register_invalid_phone(self):
+
+        response = self.client.post(
+            self.register_url,
+            {
+                "username": "newuser",
+                "email": "abc@gmail.com",
+                "password": "Password123!",
+                "confirm_password": "Password123!",
+                "phone_no": "1234"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+    def test_register_invalid_gender(self):
+
+        response = self.client.post(
+            self.register_url,
+            {
+                "username": "newuser",
+                "email": "abc@gmail.com",
+                "password": "Password123!",
+                "confirm_password": "Password123!",
+                "gender": "A"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+    def test_update_duplicate_username(self):
+
+        User.objects.create_user(
+            username="anotheruser",
+            email="another@gmail.com",
+            password="Password123!"
+        )
+
+        response = self.client.patch(
+            self.update_url,
+            {
+                "username": "anotheruser"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+    def test_update_duplicate_email(self):
+
+        User.objects.create_user(
+            username="abc",
+            email="duplicate@gmail.com",
+            password="Password123!"
+        )
+
+        response = self.client.patch(
+            self.update_url,
+            {
+                "email": "duplicate@gmail.com"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+    def test_update_duplicate_phone(self):
+
+        User.objects.create_user(
+            username="abc",
+            email="abc@gmail.com",
+            phone_no="9999999999",
+            password="Password123!"
+        )
+
+        response = self.client.patch(
+            self.update_url,
+            {
+                "phone_no": "9999999999"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+    def test_forgot_password_email_not_found(self):
+
+        response = self.client.post(
+            self.forgot_url,
+            {
+                "email": "notfound@gmail.com"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_profile_upload_path(self):
+
+        path = User.profile_upload_path(
+            self.user,
+            "profile.jpg"
+        )
+
+        self.assertIn(
+            "profile/",
+            path
+        )
+
+        self.assertTrue(
+            path.endswith(".jpg")
+        )
+    def test_user_string(self):
+
+        self.assertEqual(
+            str(self.user),
+            "existinguser"
+        )
+    def test_otp_expired(self):
+
+        otp_obj = otp.objects.create(
+            email=self.user,
+            otp="123456"
+        )
+
+        otp_obj.created_at = timezone.now() - timedelta(minutes=6)
+        otp_obj.save(update_fields=["created_at"])
+
+        self.assertTrue(
+            otp_obj.is_expired()
+        )
+    def test_otp_not_expired(self):
+
+        otp_obj = otp.objects.create(
+            email=self.user,
+            otp="123456"
+        )
+
+        self.assertFalse(
+            otp_obj.is_expired()
+        )
+    
+    def test_reset_password_without_session(self):
+
+        response = self.client.post(
+            reverse("reset_password"),
+            {
+                "otp": "123456",
+                "new_password": "Password123!",
+                "confirm_password": "Password123!"
+            }
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("forgot_password")
+        )
+    def test_invalid_otp(self):
+
+        session = self.client.session
+        session["reset_email"] = self.user.email
+        session.save()
+
+        response = self.client.post(
+            reverse("reset_password"),
+            {
+                "otp": "999999",
+                "new_password": "Password123!",
+                "confirm_password": "Password123!"
+            }
+        )
+
+        self.assertContains(
+            response,
+            "Invalid OTP."
+        )
+    def test_expired_otp(self):
+
+        otp_obj = otp.objects.create(
+            email=self.user,
+            otp="123456"
+        )
+
+        otp_obj.created_at = timezone.now() - timedelta(minutes=6)
+        otp_obj.save(update_fields=["created_at"])
+
+        session = self.client.session
+        session["reset_email"] = self.user.email
+        session.save()
+
+        response = self.client.post(
+            reverse("reset_password"),
+            {
+                "otp": "123456",
+                "new_password": "Password123!",
+                "confirm_password": "Password123!"
+            }
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("forgot_password")
+        )
+    def test_reset_password_invalid_form(self):
+
+        session = self.client.session
+        session["reset_email"] = self.user.email
+        session.save()
+
+        response = self.client.post(
+            reverse("reset_password"),
+            {
+                "otp": "123456",
+                "new_password": "Password123!",
+                "confirm_password": "Password12"
+            }
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )

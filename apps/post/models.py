@@ -100,14 +100,14 @@ class Follow(models.Model):
         follow = instance
         sender = follow.follower
         following = follow.following
-        notify = Notification(sender=sender, user=following, notification_types=3)
+        notify = Notification(sender=sender, receiver=following, notification_type=3)
         notify.save()
 
     def user_unfollow(sender, instance, *args, **kwargs):
         follow = instance
         sender = follow.follower
         following = follow.following
-        notify = Notification.objects.filter(sender=sender, user=following, notification_types=3)
+        notify = Notification.objects.filter(sender=sender, receiver=following, notification_type=3)
         notify.delete()
 
     unique_together = (
