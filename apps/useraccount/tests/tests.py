@@ -1,5 +1,8 @@
+from django.test import SimpleTestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from apps.useraccount.forms import ForgotPasswordForm, LoginForm, ResetPasswordForm, SignupForm
+from apps.useraccount.utils import generate_otp
 from rest_framework import status
 from rest_framework.test import APITestCase
 from apps.useraccount.models import  otp 
@@ -309,3 +312,323 @@ class ResetPasswordViewTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+
+class SignupFormTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.user = User.objects.create_user(
+            username="existinguser",
+            email="existing@test.com",
+            password="Password123",
+            phone_no="9876543210",
+            gender="M"
+        )
+
+
+    def valid_data(self):
+
+        return {
+            "username": "testuser",
+            "email": "test@test.com",
+            "password": "Password123",
+            "phone_no": "9876543210",
+            "gender": "M",
+        }
+
+
+    # -------------------------
+    # Signup valid
+    # -------------------------
+
+    def test_signup_valid(self):
+
+        form = SignupForm(
+            data=self.valid_data()
+        )
+
+        self.assertTrue(form.is_valid())
+
+
+    # -------------------------
+    # Username validation
+    # -------------------------
+
+    def test_signup_duplicate_username(self):
+
+        data = self.valid_data()
+
+        data["username"] = "existinguser"
+
+        form = SignupForm(data=data)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "username",
+            form.errors
+        )
+
+
+    def test_signup_username_capital(self):
+
+        data = self.valid_data()
+
+        data["username"] = "TestUser"
+
+        form = SignupForm(data=data)
+
+        self.assertFalse(form.is_valid())
+
+        self.assertIn(
+            "username",
+            form.errors
+        )
+
+
+    def test_signup_username_start_number(self):
+
+        data = self.valid_data()
+
+        data["username"] = "1testuser"
+
+        form = SignupForm(data=data)
+
+        self.assertFalse(form.is_valid())
+
+        self.assertIn(
+            "username",
+            form.errors
+        )
+
+
+    def test_signup_username_start_symbol(self):
+
+        data = self.valid_data()
+
+        data["username"] = "@testuser"
+
+        form = SignupForm(data=data)
+
+        self.assertFalse(form.is_valid())
+
+        self.assertIn(
+            "username",
+            form.errors
+        )
+
+
+    # -------------------------
+    # Email validation
+    # -------------------------
+
+    def test_signup_duplicate_email(self):
+
+        data = self.valid_data()
+
+        data["email"] = "existing@test.com"
+
+        form = SignupForm(data=data)
+
+        self.assertFalse(form.is_valid())
+
+        self.assertIn(
+            "email",
+            form.errors
+        )
+
+
+    # -------------------------
+    # Password validation
+    # -------------------------
+
+    def test_signup_short_password(self):
+
+        data = self.valid_data()
+
+        data["password"] = "123"
+
+        form = SignupForm(data=data)
+
+        self.assertFalse(form.is_valid())
+
+        self.assertIn(
+            "password",
+            form.errors
+        )
+
+
+    def test_signup_only_number_password(self):
+
+        data = self.valid_data()
+
+        data["password"] = "12345678"
+
+        form = SignupForm(data=data)
+
+        self.assertFalse(form.is_valid())
+
+        self.assertIn(
+            "password",
+            form.errors
+        )
+
+
+    # -------------------------
+    # Phone validation
+    # -------------------------
+
+    def test_signup_invalid_phone(self):
+
+        data = self.valid_data()
+
+        data["phone_no"] = "12345"
+
+        form = SignupForm(data=data)
+
+        self.assertFalse(form.is_valid())
+
+        self.assertIn(
+            "phone_no",
+            form.errors
+        )
+
+
+    def test_signup_phone_contains_letters(self):
+
+        data = self.valid_data()
+
+        data["phone_no"] = "98765abc10"
+
+        form = SignupForm(data=data)
+
+        self.assertFalse(form.is_valid())
+
+        self.assertIn(
+            "phone_no",
+            form.errors
+        )
+
+
+
+class LoginFormTestCase(APITestCase):
+
+
+    def test_login_form_valid(self):
+
+        form = LoginForm(
+            data={
+                "username":"testuser",
+                "password":"Password123"
+            }
+        )
+
+        self.assertTrue(
+            form.is_valid()
+        )
+
+
+    def test_login_form_empty(self):
+
+        form = LoginForm(
+            data={}
+        )
+
+        self.assertFalse(
+            form.is_valid()
+        )
+
+
+
+class ForgotPasswordFormTestCase(APITestCase):
+
+
+    def test_valid_email(self):
+
+        form = ForgotPasswordForm(
+            data={
+                "email":"test@test.com"
+            }
+        )
+
+        self.assertTrue(
+            form.is_valid()
+        )
+
+
+    def test_invalid_email(self):
+
+        form = ForgotPasswordForm(
+            data={
+                "email":"invalid"
+            }
+        )
+
+        self.assertFalse(
+            form.is_valid()
+        )
+
+
+
+class ResetPasswordFormTestCase(APITestCase):
+
+
+    def test_reset_password_valid(self):
+
+        form = ResetPasswordForm(
+            data={
+                "otp":"123456",
+                "new_password":"Password123"
+            }
+        )
+
+        self.assertTrue(
+            form.is_valid()
+        )
+
+
+    def test_reset_password_invalid_otp_length(self):
+
+        form = ResetPasswordForm(
+            data={
+                "otp":"1235697",
+                "new_password":"Password123"
+            }
+        )
+
+        self.assertFalse(
+            form.is_valid()
+        )
+
+        self.assertIn(
+            "otp",
+            form.errors
+        )
+
+class GenerateOTPTestCase(SimpleTestCase):
+
+    def test_generate_otp_default_length(self):
+        otp = generate_otp()
+
+        self.assertEqual(len(otp), 6)
+        self.assertTrue(otp.isdigit())
+
+    def test_generate_otp_custom_length(self):
+        otp = generate_otp(4)
+
+        self.assertEqual(len(otp), 4)
+        self.assertTrue(otp.isdigit())
+
+    def test_generate_otp_zero_length(self):
+        otp = generate_otp(0)
+
+        self.assertEqual(otp, "")
+
+    def test_generate_otp_random(self):
+        otp1 = generate_otp()
+        otp2 = generate_otp()
+
+     
+        self.assertEqual(len(otp1), 6)
+        self.assertEqual(len(otp2), 6)
+        self.assertTrue(otp1.isdigit())
+        self.assertTrue(otp2.isdigit())

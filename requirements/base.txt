@@ -13,3 +13,7 @@ requests
 drf-spectacular
 user_agents
 pytest
+boto3
+django-storages
+coverage
+pynguin

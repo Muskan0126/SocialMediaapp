@@ -2,15 +2,25 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth import get_user_model
+import uuid
+import os
 # Create your models here.
 
+
+
+
+def post_upload_path(instance, filename):
+    ext = os.path.splitext(filename)[1]
+    return f"https://instagram-clone-muskan.s3.ap-southeast-2.amazonaws.com/posts/{instance.user.id}/{uuid.uuid4()}{ext}"
+
+
+def story_upload_path(instance, filename):
+    ext = os.path.splitext(filename)[1]
+    return f"https://instagram-clone-muskan.s3.ap-southeast-2.amazonaws.com/story/{instance.user.id}/{uuid.uuid4()}{ext}"
+
 User = get_user_model()
-def user_directory_path(instance, filename):
-    return 'user_{0}/{1}'.format(instance.user.id, filename)
-
-
 class Post(models.Model):
-    picture = models.ImageField(upload_to=user_directory_path)
+    picture = models.ImageField(upload_to=post_upload_path)
     caption = models.CharField(max_length=10000)
     posted = models.DateField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -129,7 +139,7 @@ class Story(models.Model):
     )
 
     image = models.ImageField(
-        upload_to="stories/"
+        upload_to=story_upload_path
     )
 
     created_at = models.DateTimeField(

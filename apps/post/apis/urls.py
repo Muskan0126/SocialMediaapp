@@ -11,5 +11,5 @@ urlpatterns = [
  path("<int:post_id>/like/",LikeAPIView.as_view(),name="like"),# /api/posts/28/like/
  path("<int:id>/follow/",FollowAPIView.as_view(),name="follow"),#/api/posts/61/follow/  
  path("<int:post_id>/comment/",CommentAPIView.as_view(),name="follow"),#/ap/posts/28/comment/i    
- path("story-delete/<int:pk>/",DeleteStoryAPIView.as_view(),name="post-delete"),# /api/posts/story-delete/2/
+ path("story-delete/<int:pk>/",DeleteStoryAPIView.as_view(),name="story-delete"),# /api/posts/story-delete/2/
 ]

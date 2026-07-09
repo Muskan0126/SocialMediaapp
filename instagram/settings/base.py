@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.github",
     "allauth.socialaccount.providers.discord",
-    "drf_spectacular"
+    "drf_spectacular",
+    "storages",
 ]
 
 
@@ -197,7 +198,7 @@ STATIC_URL = "static/"
 
 MEDIA_URL = "/media/"
 
-MEDIA_ROOT = BASE_DIR / "media"
+# MEDIA_ROOT = BASE_DIR / "media"
 
 
 # =========================
@@ -242,3 +243,27 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+
+# S3 Bucket
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+
+AWS_S3_FILE_OVERWRITE = False
+
+AWS_DEFAULT_ACL = None
+
+AWS_QUERYSTRING_AUTH = False
+
+AWS_S3_VERIFY = True
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"

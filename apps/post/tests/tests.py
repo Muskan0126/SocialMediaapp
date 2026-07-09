@@ -1,5 +1,8 @@
+from django import middleware
 from django.core.files.uploadedfile import SimpleUploadedFile
-from apps.post.models import Post, Story, Likes, Follow, Comment
+from django.http import HttpResponse
+from django.test import Client, RequestFactory
+from apps.post.models import Notification, Post, Story, Likes, Follow, Comment
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -12,7 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from PIL import Image
 from io import BytesIO
 from django.core.files.uploadedfile import SimpleUploadedFile
-
+from apps.useraccount.test_middleware import RequestLoggingMiddleware, SystemInfoMiddleware
 User = get_user_model()
 class PostAPIViewTestCase(APITestCase):
 
@@ -35,7 +38,25 @@ class PostAPIViewTestCase(APITestCase):
         self.client.credentials(
             HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
         )
-    def get_temporary_image():
+
+
+        self.image = self.get_temporary_image()
+
+        self.post = Post.objects.create(
+            user=self.user,
+            picture=self.image,
+            caption="Test Caption"
+        )
+
+        self.story = Story.objects.create(
+            user=self.user,
+            image=self.image
+        )
+
+
+        self.create_post_url = reverse("create-post")
+        self.post_list_url = reverse("post-list")
+    def get_temporary_image(self):
 
         file = BytesIO()
 
@@ -56,25 +77,11 @@ class PostAPIViewTestCase(APITestCase):
             file.read(),
             content_type="image/jpeg"
         )
-        self.image = get_temporary_image()
-
-        self.post = Post.objects.create(
-            user=self.user,
-            picture=self.image,
-            caption="Test Caption"
-        )
-
-        self.story = Story.objects.create(
-            user=self.user,
-            image=self.image
-        )
-
-        self.create_post_url = reverse("create-post")
-        self.post_list_url = reverse("post-list")
+        
 
     def test_create_post_success(self):
 
-        image = get_temporary_image()
+        image = self.get_temporary_image()
 
         response = self.client.post(
             self.create_post_url,
@@ -95,18 +102,52 @@ class PostAPIViewTestCase(APITestCase):
     
     def test_create_post_invalid_image(self):
 
-        image = get_temporary_image()
+        invalid_file = SimpleUploadedFile(
+            "test.txt",
+            b"This is not an image",
+            content_type="text/plain"
+        )
+
+        response = self.client.post(
+            self.create_post_url,
+            {
+                "picture": invalid_file,
+                "caption": "Hello"
+            },
+            format="multipart"
+        )
+        print("\n Error :", response.data)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST
+        )
+
+        self.assertEqual(
+            str(response.data["picture"][0]),
+            "Upload a valid image. The file you uploaded was either not an image or a corrupted image."
+        )
+    def test_create_post_without_caption(self):
+
+        image = self.get_temporary_image()
 
         response = self.client.post(
             self.create_post_url,
             {
                 "picture": image,
-                "caption": "Hello"
+                "caption": ""
             },
             format="multipart"
         )
+        print("\n Error :", response.data)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["caption"][0],
+            "This field may not be blank."
+        )
 
     def test_post_list(self):
 
@@ -159,25 +200,42 @@ class PostAPIViewTestCase(APITestCase):
 
     def test_create_story(self):
 
-        image = SimpleUploadedFile(
-            "story.jpg",
-            b"story",
-            content_type="image/jpeg"
-        )
+        image = self.get_temporary_image()
 
         response = self.client.post(
-
             reverse("create-story"),
-
             {
                 "image": image
             },
-
             format="multipart"
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED
+        )
+    def test_create_story_invalid_image(self):
 
+        invalid_file = SimpleUploadedFile(
+            "story.txt",
+            b"This is not an image",
+            content_type="text/plain"
+        )
+
+        response = self.client.post(
+            reverse("create-story"),
+            {
+                "image": invalid_file
+            },
+            format="multipart"
+        )
+        print("\n Error :", response.data)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST
+        )
+
+        
     def test_delete_story(self):
 
         response = self.client.delete(
@@ -279,4 +337,904 @@ class PostAPIViewTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+class PostModelTest(APITestCase):
+
+    def setUp(self):
+
+        self.user = User.objects.create_user(
+            username="test",
+            password="Password123!"
+        )
+
+
+    def test_post_string(self):
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="hello"
+        )
+
+        self.assertIsNotNone(
+            str(post)
+        )
+
+
+    def test_comment_creation(self):
+
+        post = Post.objects.create(
+            user=self.user,
+            caption="hello"
+        )
+
+        comment = Comment.objects.create(
+            item=post,
+            author=self.user,
+            comment="Nice post"
+        )
+
+        self.assertEqual(
+            comment.comment,
+            "Nice post"
+        )
     
+from apps.post.forms import EditProfileForm, PostForm, ResetPassword, StoryForm
+
+
+class PostFormTest(APITestCase):
+
+
+    def test_empty_post_form(self):
+
+        form = PostForm(
+            data={}
+        )
+
+        self.assertFalse(
+            form.is_valid()
+        )
+class PostAPIViewsTestCase(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="muskan",
+            password="Password123!"
+        )
+
+        self.client = Client()
+
+    def test_post_list_view(self):
+
+        self.client.login(
+            username="muskan",
+            password="Password123!"
+        )
+
+        response = self.client.get(
+            reverse("post-list")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+    def test_create_post_login_required(self):
+
+        response = self.client.get(
+            reverse("create-post")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302
+        )
+
+
+    def test_create_post_login_required(self):
+
+        response = self.client.get(
+            reverse("create-post")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            401
+        )
+
+
+    def test_logout_view(self):
+
+        self.client.login(
+            username="muskan",
+            password="Password123!"
+        )
+
+        response = self.client.get(
+            reverse("logout")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302
+        )
+    
+
+
+
+class PostViewsTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.user = User.objects.create_user(
+            username="testuser",
+            email="test@test.com",
+            password="password123"
+        )
+
+        self.user2 = User.objects.create_user(
+            username="second",
+            email="second@test.com",
+            password="password123"
+        )
+
+        self.client.login(
+            username="testuser",
+            password="password123"
+        )
+    def get_temporary_image(self):
+
+        file = BytesIO()
+
+        image = Image.new(
+            "RGB",
+            (100,100)
+        )
+
+        image.save(
+            file,
+            "JPEG"
+        )
+
+        file.seek(0)
+
+        return SimpleUploadedFile(
+            "test.jpg",
+            file.read(),
+            content_type="image/jpeg"
+        )
+
+    # HOME VIEW
+
+    def test_home_view(self):
+
+        response = self.client.get(
+            reverse("home")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+        self.assertTemplateUsed(
+            response,
+            "post/home.html"
+        )
+
+
+
+    # CREATE POST GET
+
+    def test_create_post_get(self):
+
+        response = self.client.get(
+            reverse("create_post")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+    # CREATE POST SUCCESS
+
+    def test_create_post_success(self):
+
+        response = self.client.post(
+            reverse("create_post"),
+            {
+                "caption":"hello",
+                "picture":self.get_temporary_image()
+            }
+        )
+        self.assertEqual(
+            response.status_code,
+            302
+        )
+
+
+
+
+    # CREATE POST INVALID
+
+    def test_create_post_invalid(self):
+
+        response = self.client.post(
+            reverse("create_post"),
+            {
+                "caption":""
+            }
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+
+    # STORY GET
+
+    def test_create_story_get(self):
+
+        response=self.client.get(
+            reverse("create_story")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+
+    # STORY CREATE
+
+    def test_create_story_success(self):
+
+        response=self.client.post(
+            reverse("create_story"),
+            {
+                "image":self.get_temporary_image()
+            }
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302
+        )
+
+
+
+    # DELETE POST
+
+    def test_delete_post(self):
+
+        post=Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+
+        response=self.client.post(
+            reverse(
+                "delete_post",
+                args=[post.id]
+            )
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+        self.assertFalse(
+            Post.objects.filter(
+                id=post.id
+            ).exists()
+        )
+
+
+
+    # EDIT CAPTION
+
+    def test_edit_caption(self):
+
+        post=Post.objects.create(
+            user=self.user,
+            caption="old",
+            picture=self.get_temporary_image()
+        )
+
+
+        response=self.client.post(
+            reverse(
+                "edit_caption",
+                args=[post.id]
+            ),
+            {
+                "caption":"new"
+            }
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+        post.refresh_from_db()
+
+        self.assertEqual(
+            post.caption,
+            "new"
+        )
+
+
+
+    # LIKE POST
+
+    def test_like_post(self):
+
+        post=Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+
+        response=self.client.post(
+            reverse(
+                "like_post",
+                args=[post.id]
+            )
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+        self.assertTrue(
+            Likes.objects.exists()
+        )
+
+
+
+    # UNLIKE POST
+
+    def test_unlike_post(self):
+
+        post=Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+
+        Likes.objects.create(
+            user=self.user,
+            post=post
+        )
+
+
+        response=self.client.post(
+            reverse(
+                "like_post",
+                args=[post.id]
+            )
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+        self.assertFalse(
+            Likes.objects.exists()
+        )
+
+
+
+    # FOLLOW USER
+
+    def test_follow_user(self):
+
+        response=self.client.post(
+            reverse(
+                "follow_user",
+                args=[self.user2.id]
+            )
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+        self.assertTrue(
+            Follow.objects.exists()
+        )
+
+
+
+    # FOLLOW AGAIN REMOVE
+
+    def test_unfollow_user(self):
+
+        Follow.objects.create(
+            follower=self.user,
+            following=self.user2
+        )
+
+
+        response=self.client.post(
+            reverse(
+                "follow_user",
+                args=[self.user2.id]
+            )
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+
+    # FOLLOW SELF
+
+    def test_follow_self(self):
+
+        response=self.client.post(
+            reverse(
+                "follow_user",
+                args=[self.user.id]
+            )
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            400
+        )
+
+
+
+    # COMMENT
+
+    def test_add_comment(self):
+
+        post=Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+
+        response=self.client.post(
+            reverse(
+                "add_comment",
+                args=[post.id]
+            ),
+            {
+                "comment":"nice"
+            }
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+        self.assertEqual(
+            Comment.objects.count(),
+            1
+        )
+
+
+
+    # EMPTY COMMENT
+
+    def test_empty_comment(self):
+
+        post=Post.objects.create(
+            user=self.user,
+            caption="hello",
+            picture=self.get_temporary_image()
+        )
+
+
+        response=self.client.post(
+            reverse(
+                "add_comment",
+                args=[post.id]
+            ),
+            {
+                "comment":""
+            }
+        )
+
+
+        self.assertEqual(
+            response.status_code,
+            400
+        )
+
+
+
+    # PROFILE VIEW
+
+    def test_profile_view(self):
+
+        response=self.client.get(
+            reverse("profile_view")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+
+
+    # NOTIFICATION VIEW
+
+    def test_notifications(self):
+
+        Notification.objects.create(
+            sender=self.user2,
+            receiver=self.user,
+            notification_type="3"
+        )
+
+        response = self.client.get(
+            reverse("notifications")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+class PostFormsTestCase(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser",
+            email="test@test.com",
+            password="password123"
+        )
+
+        self.user2 = User.objects.create_user(
+            username="seconduser",
+            email="second@test.com",
+            password="password123"
+        )
+
+    def get_temporary_image(self):
+
+        file = BytesIO()
+
+        image = Image.new(
+            "RGB",
+            (100,100)
+        )
+
+        image.save(
+            file,
+            "JPEG"
+        )
+
+        file.seek(0)
+
+        return SimpleUploadedFile(
+            "test.jpg",
+            file.read(),
+            content_type="image/jpeg"
+        )
+        
+
+
+    # ------------------------
+    # PostForm
+    # ------------------------
+
+    def test_post_form_valid(self):
+        form = PostForm(
+            data={
+                "caption": "Hello"
+            },
+            files={
+                "picture": self.get_temporary_image()
+            }
+        )
+
+        self.assertTrue(form.is_valid())
+
+    # ------------------------
+    # StoryForm
+    # ------------------------
+
+    def test_story_form_valid(self):
+        form = StoryForm(
+            files={
+                "image": self.get_temporary_image()
+            }
+        )
+
+        self.assertTrue(form.is_valid())
+
+    # ------------------------
+    # EditProfileForm
+    # ------------------------
+
+    def test_edit_profile_valid(self):
+
+        form = EditProfileForm(
+            instance=self.user,
+            data={
+                "username": "newuser",
+                "email": "new@test.com",
+                "bio": "bio",
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone_no": "9876543210",
+                "gender": "M",
+            }
+        )
+
+        self.assertTrue(form.is_valid())
+
+    def test_duplicate_username(self):
+
+        form = EditProfileForm(
+            instance=self.user,
+            data={
+                "username": "seconduser",
+                "email": "new@test.com",
+                "phone_no": "9876543210",
+                "gender": "M",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("username", form.errors)
+
+    def test_invalid_username_capital(self):
+
+        form = EditProfileForm(
+            instance=self.user,
+            data={
+                "username": "TestUser",
+                "email": "new@test.com",
+                "phone_no": "9876543210",
+                "gender": "M",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("username", form.errors)
+
+    def test_invalid_username_starts_number(self):
+
+        form = EditProfileForm(
+            instance=self.user,
+            data={
+                "username": "1test",
+                "email": "new@test.com",
+                "phone_no": "9876543210",
+                "gender": "M",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("username", form.errors)
+
+    def test_duplicate_email(self):
+
+        form = EditProfileForm(
+            instance=self.user,
+            data={
+                "username": "newuser",
+                "email": "second@test.com",
+                "phone_no": "9876543210",
+                "gender": "M",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("email", form.errors)
+
+    def test_invalid_phone(self):
+
+        form = EditProfileForm(
+            instance=self.user,
+            data={
+                "username": "newuser",
+                "email": "new@test.com",
+                "phone_no": "12345",
+                "gender": "M",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("phone_no", form.errors)
+
+    def test_invalid_gender(self):
+
+        form = EditProfileForm(
+            instance=self.user,
+            data={
+                "username": "newuser",
+                "email": "new@test.com",
+                "phone_no": "9876543210",
+                "gender": "X",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("gender", form.errors)
+
+    # ------------------------
+    # ResetPassword
+    # ------------------------
+
+    def test_reset_password_valid(self):
+
+        form = ResetPassword(
+            data={
+                "old_password": "oldpassword",
+                "new_password": "Password123",
+                "confirm_password": "Password123",
+            }
+        )
+
+        self.assertTrue(form.is_valid())
+
+    def test_reset_password_short(self):
+
+        form = ResetPassword(
+            data={
+                "old_password": "oldpassword",
+                "new_password": "123",
+                "confirm_password": "123",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("new_password", form.errors)
+
+    def test_reset_password_numeric(self):
+
+        form = ResetPassword(
+            data={
+                "old_password": "oldpassword",
+                "new_password": "12345678",
+                "confirm_password": "12345678",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("new_password", form.errors)
+
+    def test_reset_password_mismatch(self):
+
+        form = ResetPassword(
+            data={
+                "old_password": "oldpassword",
+                "new_password": "Password123",
+                "confirm_password": "Password321",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("__all__", form.errors)
+
+class RequestLoggingMiddlewareTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.factory = RequestFactory()
+
+
+    def get_response(self, request):
+
+        return HttpResponse("OK")
+
+
+    def test_request_logging_middleware(self):
+
+        middleware = RequestLoggingMiddleware(
+            self.get_response
+        )
+
+        request = self.factory.get(
+            "/test-path/"
+        )
+
+        response = middleware(request)
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+        self.assertEqual(
+            response.content,
+            b"OK"
+        )
+
+
+
+class SystemInfoMiddlewareTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.factory = RequestFactory()
+
+
+    def get_response(self, request):
+
+        return HttpResponse("OK")
+
+
+    def test_system_info_middleware(self):
+
+        middleware = SystemInfoMiddleware(
+            self.get_response
+        )
+
+        request = self.factory.get(
+            "/profile/",
+            HTTP_USER_AGENT=(
+                "Mozilla/5.0 "
+                "(Windows NT 10.0; Win64; x64) "
+                "Chrome/120.0.0.0"
+            )
+        )
+
+        response = middleware(request)
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+        self.assertEqual(
+            response.content,
+            b"OK"
+        )
+
+
+    def test_system_info_without_user_agent(self):
+
+        middleware = SystemInfoMiddleware(
+            self.get_response
+        )
+
+        request = self.factory.get(
+            "/test/"
+        )
+
+        response = middleware(request)
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )

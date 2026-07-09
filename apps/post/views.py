@@ -30,7 +30,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 User = get_user_model()
 
-class home_view(View, LoginRequiredMixin):
+class home_view( LoginRequiredMixin ,View):
 
     def get(self, request):
     
@@ -58,7 +58,7 @@ class home_view(View, LoginRequiredMixin):
             context
         )
 
-class create_post_view(View):
+class create_post_view( LoginRequiredMixin ,View):
     def get (self,request):
         form = PostForm()
         return render(
@@ -92,7 +92,7 @@ class create_post_view(View):
                 "form": form
             }
         )
-class create_story_view(View):
+class create_story_view( LoginRequiredMixin ,View):
     
     def get(self,request):
         form = StoryForm()
@@ -133,15 +133,6 @@ class create_story_view(View):
             }
         )
 
-class my_posts_view(View):
-    def get(self,request):
-        posts = Post.objects.filter(user=request.user).order_by("-posted", "-id")
-        return render(
-            request,
-            "post/my_posts.html",
-            {
-                "posts": posts
-            })
 
 class delete_post_view(View):
     def post(self, request, post_id):
@@ -181,7 +172,7 @@ class delete_story_view(View):
         return redirect("home")
 
 
-class profile_view(View):
+class profile_view( LoginRequiredMixin ,View):
     def get(self,request):
         posts = (
             Post.objects
@@ -238,7 +229,7 @@ class profile_view(View):
         )
         
     
-class edit_profile(View):
+class edit_profile( LoginRequiredMixin ,View):
     def get(self,request):
         form = EditProfileForm
         form = EditProfileForm(
@@ -277,7 +268,7 @@ class edit_profile(View):
         )
 
 
-class notifications_view(View):
+class notifications_view( LoginRequiredMixin ,View):
     def get(self,request):
         notifications = Notification.objects.filter(
             receiver=request.user

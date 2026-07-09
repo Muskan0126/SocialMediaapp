@@ -7,7 +7,7 @@ from apps.post.views import (
     home_view,
     create_post_view,
     create_story_view,
-    like_post, my_posts_view, delete_post_view, delete_story_view,
+    like_post, delete_post_view, delete_story_view,
     profile_view,
     delete_account_view,
     follow_user,
@@ -28,11 +28,7 @@ urlpatterns = [
         name="create_story"
     ),
 
-    path(
-        "my-posts/",
-        my_posts_view.as_view(),
-        name="my_posts"
-    ),
+
 
     path(
         "delete-post/<int:post_id>/",

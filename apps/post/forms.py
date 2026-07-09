@@ -38,7 +38,7 @@ class EditProfileForm(forms.ModelForm):
         username = self.cleaned_data.get("username")
         if not username:
             return username
-        if not re.match(r'^[a-z][a-z0-9_]*$',username):
+        if not re.match(r'^[a-z][a-z0-9_.]*$',username):
             raise forms.ValidationError("Capital letters not allowed.")
         if User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("Username already exists.")
@@ -88,7 +88,6 @@ class ResetPassword(forms.Form):
     )
 
     def clean_new_password(self):
-        breakpoint()
         password = self.cleaned_data.get(
             "new_password"
         )

@@ -29,7 +29,7 @@ class SignupForm(forms.ModelForm):
 
     def clean_username(self):
         username = self.cleaned_data.get("username")
-        if not re.match(r'^[a-z][a-z0-9_]*$',username):
+        if not re.match(r'^[a-z][a-z0-9_.]*$',username):
             raise forms.ValidationError("Capital letters not allowed.")
         if username and (username[0].isdigit() or username[0] in ('@', '/', '-', '+')):
             raise forms.ValidationError("Username must start with a letter.")
