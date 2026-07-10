@@ -1,14 +1,10 @@
 Django
 psycopg2-binary
 Pillow
-
 djangorestframework
 djangorestframework-simplejwt
-
 django-allauth
-
 python-dotenv
-
 requests
 drf-spectacular
 user_agents
@@ -17,3 +13,4 @@ boto3
 django-storages
 coverage
 pynguin
+stripe
