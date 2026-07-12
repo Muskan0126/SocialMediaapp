@@ -24,6 +24,17 @@ class CreatePostSerializer(serializers.ModelSerializer):
             )
 
         return value
+    def validate_image(self, image):
+
+        if image.content_type not in [
+            "image/jpeg",
+            "image/png"
+        ]:
+            raise serializers.ValidationError(
+                "Story must be a JPEG or PNG image."
+            )
+
+        return image
     
 class PostListSerializer(serializers.ModelSerializer):
 

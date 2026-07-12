@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
             name='Post',
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
-                ('picture', models.ImageField(upload_to=apps.post.models.user_directory_path)),
+                ('picture', models.ImageField(upload_to=apps.post.models.post_upload_path)),
                 ('caption', models.CharField(max_length=10000)),
                 ('posted', models.DateField(auto_now_add=True)),
                 ('likes', models.IntegerField(default=0)),

@@ -86,7 +86,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_gender(self, value):
 
-        if value not in ["M", "F", "O"]:
+        if not value or value not in ["M", "F", "O"]:
             raise serializers.ValidationError(
                 "Gender must be M, F or O."
             )

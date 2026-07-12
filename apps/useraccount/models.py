@@ -2,11 +2,14 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import timedelta
 from django.utils import timezone
+import os
+import uuid
 # Create your models here.
 
 class User(AbstractUser):
-    def user_directory_path(instance, filename):
-        return 'userprofile_{0}/{1}'.format(instance.id, filename)
+    def profile_upload_path(instance, filename):
+        ext = os.path.splitext(filename)[1]
+        return f"https://instagram-clone-muskan.s3.ap-southeast-2.amazonaws.com/profile/{instance.id}/{uuid.uuid4()}{ext}"
     
     bio = models.TextField()
     email = models.EmailField( blank=False, null=False, unique=True)
@@ -14,7 +17,7 @@ class User(AbstractUser):
     country = models.CharField(max_length=30, blank=True, null = True)
     phone_no = models.CharField(blank=True,null = True)
     date_updated = models.DateTimeField(auto_now=True)
-    profile_photo = models.ImageField(upload_to=user_directory_path, null=True,blank=True, default = 'null')
+    profile_photo = models.ImageField(upload_to=profile_upload_path, null=True,blank=True, default = 'null')
 
     class Meta:
         ordering = ['username']

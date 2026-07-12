@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='profile_photo',
-            field=models.ImageField(blank=True, default='null', null=True, upload_to=apps.useraccount.models.User.user_directory_path),
+            field=models.ImageField(blank=True, default='null', null=True, upload_to=apps.useraccount.models.User.profile_upload_path),
         ),
         migrations.AlterField(
             model_name='user',

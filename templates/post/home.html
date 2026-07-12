@@ -131,18 +131,18 @@ body {
   color : #f1f1f1;
 }
 
-.home-topbar {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  margin-bottom:20px;
+.home-topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+gap:12px;
 }
 
-.home-actions {
-  display:flex;
-  gap:10px;
-  align-items:center;
+.home-actions{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
 }
 
 .home-action-btn {
@@ -168,9 +168,11 @@ body {
 }
 
 .container{
-width:60%;
+    width:100%;
+    max-width:800px;
     margin:auto;
-margin-top:30px;
+    padding:0 15px;
+    margin-top:30px;
 }
 
 .stories{
@@ -182,7 +184,14 @@ padding:15px;
 border:1px solid #0a0a0a;
 margin-bottom:20px;
 }
+.stories{
+overflow-x:auto;
+scrollbar-width:none;
+}
 
+.stories::-webkit-scrollbar{
+display:none;
+}
 .story{
 text-align:center;
 color : white
@@ -216,11 +225,12 @@ font-size: 20px;
 }
 
 .post-image{
-width:800px;
-max-height:400px;
-object-fit:cover; 
-display : block;
-align-items: center;}
+    width:100%;
+    height:auto;
+    max-height:500px;
+    object-fit:cover;
+    display:block;
+}
 
 .post-content{
 padding:15px;
@@ -245,8 +255,8 @@ cursor:pointer;
 }
 
 .comment-modal{
+width:95%;
 max-width:620px;
-padding:22px 26px;
 }
 
 .comment-modal-header{
@@ -491,7 +501,152 @@ white-space:normal;
     flex-direction: column;
     padding-bottom: 20px;
 }
+.feed-loader{
+    text-align:center;
+    padding:20px;
+    font-size:18px;
+    color:#777;
+}
+@media (max-width:768px){
 
+.container{
+width:100%;
+padding:10px;
+}
+
+.home-topbar{
+flex-direction:column;
+align-items:flex-start;
+}
+
+.home-actions{
+width:100%;
+justify-content:space-between;
+}
+
+.home-action-btn{
+flex:1;
+font-size:13px;
+padding:10px;
+}
+
+.post-header{
+font-size:16px;
+padding:10px;
+}
+
+.post-content{
+padding:10px;
+}
+
+.post-caption{
+font-size:14px;
+}
+
+.post-actions{
+gap:8px;
+flex-wrap:wrap;
+}
+
+.comment-open-btn{
+width:40px;
+height:40px;
+font-size:24px;
+}
+
+.profile img{
+width:55px;
+height:55px;
+}
+
+.circle-pic{
+width:55px;
+height:55px;
+}
+
+.pro img{
+width:28px;
+height:28px;
+}
+
+.comment-modal{
+width:96%;
+padding:15px;
+}
+
+.comment-form{
+flex-direction:column;
+}
+
+.comment-form button{
+width:100%;
+}
+
+.reply-form{
+flex-direction:column;
+}
+
+.reply-form button{
+width:100%;
+}
+
+.custom-modal{
+width:95%;
+padding:18px;
+}
+
+.modal-footer{
+flex-direction:column;
+}
+
+.modal-footer button{
+width:100%;
+}
+
+.post-image{
+max-height:350px;
+}
+
+}
+@media (max-width:480px){
+
+.home-topbar span{
+font-size:24px;
+}
+
+.post-header{
+font-size:14px;
+}
+
+.story p{
+font-size:12px;
+}
+
+.post-caption{
+font-size:13px;
+}
+
+.comment-text{
+font-size:13px;
+}
+
+.comment-open-btn{
+width:36px;
+height:36px;
+font-size:20px;
+}
+
+.profile img{
+width:50px;
+height:50px;
+}
+
+.circle-pic{
+width:50px;
+height:50px;
+}
+
+}
 </style>
 </head>
 <body>
@@ -619,7 +774,7 @@ white-space:normal;
         {% endfor %}
 
         </div>
-        
+        <div id="posts-container">
         {% for post in posts %}
         
         <div class="post" data-post-id="{{ post.id }}">
@@ -773,7 +928,7 @@ white-space:normal;
         </div> 
         
         {% endfor %}
-        
+        </div>
         </div> 
         </div> 
 
@@ -924,6 +1079,54 @@ white-space:normal;
 </div>
 
 <script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const postsContainer = document.getElementById("posts-container");
+
+    // Save only the ORIGINAL posts
+    const originalPosts = postsContainer.innerHTML;
+
+    let isLoading = false;
+
+    window.addEventListener("scroll", function () {
+
+        if (isLoading) return;
+
+        // User is close to the bottom
+        if (
+            window.innerHeight + window.scrollY >=
+            document.body.scrollHeight - 400
+        ) {
+
+            isLoading = true;
+
+            // Small delay (optional)
+           const loader = document.createElement("div");
+loader.className = "feed-loader";
+loader.innerHTML = "<p>Loading...</p>";
+
+postsContainer.appendChild(loader);
+
+setTimeout(() => {
+
+    loader.remove();
+
+    postsContainer.insertAdjacentHTML(
+        "beforeend",
+        originalPosts
+    );
+
+    isLoading = false;
+
+}, 500);
+
+        }
+
+    });
+
+});
+
 $(document).ready(function(){
 
     // Read more / read less for captions

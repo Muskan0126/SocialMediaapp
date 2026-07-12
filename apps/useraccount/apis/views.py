@@ -93,9 +93,6 @@ class LoginAPIView(APIView):
             status=status.HTTP_400_BAD_REQUEST
 
         )
-    
-
-
 class ProfileAPIView(APIView):
 # /api/accounts/profile/id=1
     permission_classes = [IsAuthenticated]
@@ -158,8 +155,8 @@ class UpdateProfileAPIView(APIView):
             serializer.save()
             return Response(serializer.data)
 
-        return Response(serializer.errors)
-    
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class LogoutView(APIView):
 
