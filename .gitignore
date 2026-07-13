@@ -44,4 +44,4 @@ htmlcov/
 # Node
 node_modules/
 
-.*deb
+*.deb
