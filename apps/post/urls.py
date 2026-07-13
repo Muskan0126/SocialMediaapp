@@ -3,6 +3,8 @@ from django.urls import path
 from apps.useraccount.views import forgot_password_view
 
 from apps.post.views import (
+    CreateCheckoutSessionView,
+    PremiumView,
     edit_profile,
     home_view,
     create_post_view,
@@ -15,6 +17,7 @@ from apps.post.views import (
     add_comment,
     delete_comment_view,
     edit_caption_view,
+    stripe_webhook,
 )
 
 urlpatterns = [
@@ -86,4 +89,20 @@ urlpatterns = [
         edit_caption_view.as_view(),
         name="edit_caption"
     ),
+    path(
+    "premium/",
+    PremiumView.as_view(),
+    name="premium"
+),
+
+path(
+    "stripe/webhook/",
+    stripe_webhook,
+    name="stripe_webhook"
+),
+path(
+    "create-checkout-session/",
+    CreateCheckoutSessionView.as_view(),
+    name="create_checkout_session"
+),
 ]

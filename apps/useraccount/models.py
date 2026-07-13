@@ -36,3 +36,37 @@ class otp(models.Model):
 
     def __str__(self):
         return f"OTP for {self.email}"
+
+class Subscription(models.Model):
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    is_premium = models.BooleanField(
+        default=False
+    )
+
+    stripe_customer_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    stripe_session_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"{self.user.username} Premium"
