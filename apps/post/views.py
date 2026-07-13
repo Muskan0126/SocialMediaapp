@@ -461,7 +461,7 @@ def stripe_webhook(request):
 
         print("Payment Successful")
 
-        metadata = session.metadata
+        metadata = session["metadata"]
         print(metadata)
         user_id = metadata["user_id"]
         print(user_id)
