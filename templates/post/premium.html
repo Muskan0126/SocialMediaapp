@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>Instagram Premium</title>
+
+<style>
+
+body{
+
+    margin:0;
+    padding:0;
+    background:#000;
+    color:white;
+    font-family:Arial,sans-serif;
+
+}
+
+.container{
+
+    width:80%;
+    margin:auto;
+    text-align:center;
+    margin-top:50px;
+
+}
+
+.card{
+
+    width:450px;
+    margin:auto;
+    background:#181818;
+    border:1px solid #333;
+    border-radius:15px;
+    padding:40px;
+
+}
+
+.card h1{
+
+    color:#e1306c;
+    margin-bottom:10px;
+
+}
+
+.card p{
+
+    color:#bbb;
+    line-height:1.6;
+
+}
+
+.price{
+
+    font-size:35px;
+    color:#fff;
+    margin:25px 0;
+
+}
+
+ul{
+
+    list-style:none;
+    padding:0;
+    margin-top:30px;
+    margin-bottom:40px;
+
+}
+
+li{
+
+    padding:12px;
+    border-bottom:1px solid #2c2c2c;
+
+}
+
+.buy-btn{
+
+    display:inline-block;
+    text-decoration:none;
+    background:#e1306c;
+    color:white;
+    padding:15px 40px;
+    border-radius:8px;
+    font-size:18px;
+    transition:.3s;
+
+}
+
+.buy-btn:hover{
+
+    background:#ff4f87;
+
+}
+
+.back{
+
+    position:absolute;
+    left:30px;
+    top:25px;
+    color:white;
+    text-decoration:none;
+    font-size:18px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<a
+href="{% url 'home' %}"
+class="back">
+
+🏠 Home
+
+</a>
+
+<div class="container">
+
+<div class="card">
+<h1>
+
+Instagram Premium
+
+</h1>
+{% if request.user.subscription.is_premium %}
+<h2>Enjoying Premium!!!</h2> 
+<h1> Rate Us </h1>
+<p> &#128512   &#128524   &#128532   &#128544   </p>
+{% endif %}
+{% if not request.user.subscription.is_premium %}
+<p>
+Unlock exclusive premium features and support the platform.
+
+</p>
+
+<div class="price">
+
+₹200
+
+</div>
+
+<ul>
+
+<li>✔ Premium Badge</li>
+
+<li>✔ Early Access to New Features</li>
+
+<li>✔ Priority Support</li>
+
+</ul>
+
+<form method="POST" action="{% url 'create_checkout_session' %}">
+    {% csrf_token %}
+
+    <button type="submit">
+        Upgrade to Premium
+    </button>
+</form>
+{% endif %}
+</div>
+
+</div>
+
+<script>
+
+const button = document.querySelector(".buy-btn");
+
+button.addEventListener("mouseenter", function(){
+
+    button.style.transform = "scale(1.05)";
+
+});
+
+button.addEventListener("mouseleave", function(){
+
+    button.style.transform = "scale(1)";
+
+});
+
+</script>
+
+</body>
+
+</html>

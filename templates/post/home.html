@@ -657,7 +657,7 @@ height:50px;
   <a href="{% url 'notifications' %}">&#8506 Notifications</a>
   <a href="{% url 'logout' %}">&#10149 Signout</a>
   <a href="{% url 'profile_view' %}"> &#9787 Profile</a>
-
+  <a href="{% url 'premium' %}" class="a">⭐ Premium</a>
     <a href="{% url 'forgot_password' %}"> &#9998 Reset Password </a> 
     
     <button
@@ -791,6 +791,18 @@ height:50px;
             {% endif %}
           
           <span>{{ post.user.username }}
+            {% if post.user.subscription.is_premium %}
+            <span
+            style="
+            background:rgb(87, 166, 231);
+            color:black;
+            padding:1px 4px;
+            border-radius:10px;">
+              &#10004
+              </span>
+          {% endif %}
+            
+    
             <div style="font-size: 10px">
                 {% load tz %}
 {{ post.updated_at|timezone:"Asia/Kolkata" }}
@@ -947,7 +959,7 @@ height:50px;
   </div>
 </div>
 
-<!-- Add Story Modal -->
+
 <div class="custom-overlay upload-overlay" id="storyUploadOverlay">
   <div class="custom-modal">
     <h5>Add Story</h5>
@@ -965,7 +977,7 @@ height:50px;
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Delete Post Modal -->
+
 <div class="modal fade" id="deletePostModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content bg-dark text-white">
@@ -982,7 +994,7 @@ height:50px;
   </div>
 </div>
 
-<!-- Delete Story Modal -->
+
 <div class="modal fade" id="deleteStoryModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content bg-dark text-white">
@@ -1066,7 +1078,7 @@ height:50px;
   </div>
 
 </div>
-<!-- Edit Caption Modal -->
+
 <div class="custom-overlay" id="editCaptionOverlay">
   <div class="custom-modal">
     <h5>Edit Caption</h5>
@@ -1084,7 +1096,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const postsContainer = document.getElementById("posts-container");
 
-    // Save only the ORIGINAL posts
+
     const originalPosts = postsContainer.innerHTML;
 
     let isLoading = false;
@@ -1093,7 +1105,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (isLoading) return;
 
-        // User is close to the bottom
         if (
             window.innerHeight + window.scrollY >=
             document.body.scrollHeight - 400
@@ -1101,7 +1112,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             isLoading = true;
 
-            // Small delay (optional)
            const loader = document.createElement("div");
 loader.className = "feed-loader";
 loader.innerHTML = "<p>Loading...</p>";
@@ -1129,11 +1139,11 @@ setTimeout(() => {
 
 $(document).ready(function(){
 
-    // Read more / read less for captions
+  
     $(".caption-text").each(function(){
         var $span = $(this);
         var $btn = $span.siblings(".caption-toggle");
-        // Only show toggle if text is actually clamped
+     
         if (this.scrollHeight > this.clientHeight + 2) {
             $btn.show();
         }

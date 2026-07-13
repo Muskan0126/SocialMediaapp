@@ -1,4 +1,5 @@
-from django.http import JsonResponse
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import (
     render,
     redirect,
@@ -9,8 +10,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.views import View
-
+from django.views.decorators.csrf import csrf_exempt
 from apps.useraccount.forms import ForgotPasswordForm
+from apps.useraccount.models import Subscription
 from .models import (
     Likes,
     Post,
@@ -27,7 +29,9 @@ from django.contrib.auth import (
 )
 from django.db.models import Case, When, IntegerField
 from django.contrib.auth import get_user_model
+import stripe
 from django.contrib.auth.mixins import LoginRequiredMixin
+stripe.api_key = settings.STRIPE_SECRET_KEY
 User = get_user_model()
 
 class home_view( LoginRequiredMixin ,View):
@@ -44,6 +48,7 @@ class home_view( LoginRequiredMixin ,View):
         posts = Post.objects.select_related("user").order_by("-posted", "-id")
         liked_posts = Likes.objects.filter(user=request.user).values_list("post_id", flat=True)
         following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
+        subscription = Subscription.objects.filter(user=request.user).first()
         context = {
             "stories": stories,
             "posts": posts,
@@ -51,6 +56,7 @@ class home_view( LoginRequiredMixin ,View):
             "following_ids": following_ids,
             "post_form": PostForm(),
             "story_form": StoryForm(),
+            "subscription": subscription,
         }
         return render(
             request,
@@ -205,7 +211,9 @@ class profile_view( LoginRequiredMixin ,View):
                 follower=request.user
             ).count()
         )
-
+        subscription = Subscription.objects.filter(
+            user=request.user
+        ).first()
         posts_count = posts.count()
 
         context = {
@@ -220,6 +228,7 @@ class profile_view( LoginRequiredMixin ,View):
 
             "posts_count":
                 posts_count,
+            "subscription": subscription,
         }
 
         return render(
@@ -415,3 +424,104 @@ class follow_user(View):
             "following": following,
             "followers_count": Follow.objects.filter(following=target).count(),
         })
+
+class PremiumView(View):
+
+    def get(self, request):
+        subscription = Subscription.objects.filter(user=request.user).first()
+        context = {
+            "subscription": subscription,
+        }
+        return render(
+            request,
+            "post/premium.html", context)
+        
+@csrf_exempt
+def stripe_webhook(request):
+
+    payload = request.body
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=payload,
+            sig_header=sig_header,
+            secret=settings.STRIPE_WEBHOOK_SECRET
+        )
+
+    except ValueError:
+        return HttpResponse(status=400)
+
+    except stripe.error.SignatureVerificationError:
+        return HttpResponse(status=400)
+
+    if event["type"] == "checkout.session.completed":
+
+        session = event["data"]["object"]
+
+        print("Payment Successful")
+
+        metadata = session.metadata
+        print(metadata)
+        user_id = metadata["user_id"]
+        print(user_id)
+
+        if not user_id:
+            print("No user_id found in metadata")
+            return HttpResponse(status=200)
+
+        try:
+            user = User.objects.get(id=user_id)
+
+            subscription, created = Subscription.objects.get_or_create(
+    user=user
+)
+
+            # Idempotency check
+            if subscription.stripe_session_id == session["id"]:
+
+                print("Webhook already processed.")
+
+                return HttpResponse(status=200)
+
+            subscription.is_premium = True
+            subscription.stripe_customer_id = session["customer"]
+            subscription.stripe_session_id = session["id"]
+
+            subscription.save()
+
+            print(f"Premium activated for {user.username}")
+
+        except User.DoesNotExist:
+            print("User not found")
+
+    return HttpResponse(status=200)
+class CreateCheckoutSessionView(View):
+
+    def post(self, request):
+
+        session = stripe.checkout.Session.create(
+
+            mode="payment",
+
+            line_items=[
+                {
+                    "price": settings.STRIPE_PRICE_ID,
+                    "quantity": 1,
+                }
+            ],
+
+            metadata={
+                "user_id": request.user.id
+            },
+
+            success_url=request.build_absolute_uri(
+    "/post/profile-view"
+),
+
+            cancel_url=request.build_absolute_uri(
+                "/post/premium/"
+            ),
+        )
+
+        return redirect(session.url)

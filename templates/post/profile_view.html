@@ -166,7 +166,21 @@ white-space:normal;
     
 <div class="profile-info">
 
-<h1>{{ request.user.username }}</h1>
+<h1>{{ request.user.username }}
+    {% if subscription and subscription.is_premium %}
+        <span
+            style="
+                
+            background:rgb(87, 166, 231);
+            color:black;
+            padding:1px 4px;
+            border-radius:20px;
+            "
+        >
+        &#10004
+        </span>
+    {% endif %}
+</h1>
 
 <div class="stats">
 
