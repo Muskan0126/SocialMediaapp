@@ -25,17 +25,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "apps.useraccount",
     "apps.post.apps.PostConfig",
     "apps.directs",
-
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-
     "django.contrib.sites",
-
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -114,7 +110,11 @@ SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": [
             "email",
-        ],
+            ],
+            "AUTH_PARAMS": {
+            "prompt": "select_account",
+        },
+    
     },
 
     "github": {

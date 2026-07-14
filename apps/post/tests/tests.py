@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+import stripe
 from django import middleware
 from rest_framework.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -1592,3 +1594,295 @@ class ValidatorTestCase(APITestCase):
 
         with self.assertRaises(ValidationError):
             validate_image(file)
+
+class PremiumViewTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.client = Client()
+
+        self.user = User.objects.create_user(
+            username="muskan",
+            password="Password123!"
+        )
+
+        self.client.login(
+            username="muskan",
+            password="Password123!"
+        )
+
+    @patch("apps.post.views.render")
+    @patch("apps.post.views.Subscription.objects.filter")
+    def test_premium_page(self, mock_filter, mock_render):
+
+        subscription = MagicMock()
+
+        mock_filter.return_value.first.return_value = subscription
+
+        mock_render.return_value = HttpResponse()
+
+        response = self.client.get(
+            reverse("premium")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+        mock_filter.assert_called_once_with(
+            user=self.user
+        )
+
+        mock_render.assert_called_once()
+
+class CheckoutSessionTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.client = Client()
+
+        self.user = User.objects.create_user(
+            username="muskan",
+            password="Password123!"
+        )
+
+        self.client.login(
+            username="muskan",
+            password="Password123!"
+        )
+
+    @patch("apps.post.views.stripe.checkout.Session.create")
+    def test_create_checkout_session(self, mock_create):
+
+        session = MagicMock()
+
+        session.url = "https://stripe.com/test"
+
+        mock_create.return_value = session
+
+        response = self.client.post(
+            reverse("create_checkout_session")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302
+        )
+
+        self.assertEqual(
+            response.url,
+            "https://stripe.com/test"
+        )
+
+        mock_create.assert_called_once()
+
+class StripeWebhookTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.client = Client()
+
+    @patch("apps.post.views.stripe.Webhook.construct_event")
+    def test_invalid_signature(
+        self,
+        mock_construct
+    ):
+
+        
+
+        mock_construct.side_effect = (
+            stripe.error.SignatureVerificationError(
+                "Invalid",
+                "sig"
+            )
+        )
+
+        response = self.client.post(
+            reverse("stripe_webhook"),
+            data=b"",
+            content_type="application/json"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400
+        )
+
+    @patch("apps.post.views.Subscription.objects.get_or_create")
+    @patch("apps.post.views.User.objects.get")
+    @patch("apps.post.views.stripe.Webhook.construct_event")
+    def test_webhook_success(
+        self,
+        mock_construct,
+        mock_user_get,
+        mock_subscription
+    ):
+
+        user = MagicMock()
+
+        user.username = "muskan"
+
+        mock_user_get.return_value = user
+
+        subscription = MagicMock()
+
+        subscription.stripe_session_id = None
+
+        mock_subscription.return_value = (
+            subscription,
+            True
+        )
+
+        event = {
+
+            "type": "checkout.session.completed",
+
+            "data": {
+
+                "object": {
+
+                    "id": "session123",
+
+                    "customer": "cus_123",
+
+                    "metadata": {
+
+                        "user_id": 1
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        mock_construct.return_value = event
+
+        response = self.client.post(
+            reverse("stripe_webhook"),
+            data=b"",
+            content_type="application/json"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+        self.assertTrue(
+            subscription.is_premium
+        )
+
+        subscription.save.assert_called_once()
+    @patch("apps.post.views.User.objects.get")
+    @patch("apps.post.views.stripe.Webhook.construct_event")
+    def test_webhook_user_not_found(
+        self,
+        mock_construct,
+        mock_get
+    ):
+
+        mock_get.side_effect = (
+            User.DoesNotExist
+        )
+
+        event = {
+
+            "type": "checkout.session.completed",
+
+            "data": {
+
+                "object": {
+
+                    "id": "abc",
+
+                    "customer": "cus",
+
+                    "metadata": {
+
+                        "user_id": 99
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        mock_construct.return_value = event
+
+        response = self.client.post(
+            reverse("stripe_webhook"),
+            data=b"",
+            content_type="application/json"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+    @patch("apps.post.views.Subscription.objects.get_or_create")
+    @patch("apps.post.views.User.objects.get")
+    @patch("apps.post.views.stripe.Webhook.construct_event")
+    def test_duplicate_webhook(
+        self,
+        mock_construct,
+        mock_get,
+        mock_subscription
+    ):
+
+        user = MagicMock()
+
+        mock_get.return_value = user
+
+        subscription = MagicMock()
+
+        subscription.stripe_session_id = "session123"
+
+        mock_subscription.return_value = (
+            subscription,
+            False
+        )
+
+        event = {
+
+            "type": "checkout.session.completed",
+
+            "data": {
+
+                "object": {
+
+                    "id": "session123",
+
+                    "customer": "cus",
+
+                    "metadata": {
+
+                        "user_id": 1
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        mock_construct.return_value = event
+
+        response = self.client.post(
+            reverse("stripe_webhook"),
+            data=b"",
+            content_type="application/json"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+        subscription.save.assert_not_called()
