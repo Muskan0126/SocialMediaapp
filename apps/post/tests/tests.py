@@ -1,5 +1,5 @@
 from unittest.mock import MagicMock, patch
-
+import stripe
 from django import middleware
 from rest_framework.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -1689,7 +1689,7 @@ class StripeWebhookTestCase(APITestCase):
         mock_construct
     ):
 
-        import stripe
+        
 
         mock_construct.side_effect = (
             stripe.error.SignatureVerificationError(
