@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.github",
     "allauth.socialaccount.providers.discord",
+    'allauth.socialaccount.providers.openid_connect',
     "drf_spectacular",
     "storages",
 ]
@@ -131,7 +132,22 @@ SOCIALACCOUNT_PROVIDERS = {
             "email",
         ],
     },
+    'openid_connect': {
+        'APPS': [
+            {
+                'provider_id': 'linkedin',    
+                'name': 'LinkedIn',             
+                'client_id': os.getenv("LINKEDIN_CLIENT_ID"),  
+                'secret': os.getenv("LINKEDIN_CLIENT_SECRET"), 
+                'settings': {
+                    'server_url': 'https://www.linkedin.com/oauth',
+                },
+            }
+        ]
+    }
 }
+
+
 
 
 # =========================
