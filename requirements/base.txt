@@ -14,3 +14,4 @@ django-storages
 coverage
 pynguin
 stripe
+pre-commit
