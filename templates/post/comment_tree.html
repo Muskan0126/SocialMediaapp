@@ -1,0 +1,48 @@
+<div
+    class="comment-item"
+    data-comment-id="{{ comment.id }}"
+>
+
+    <div class="comment-header">
+        <div class="comment-author-actions">
+            <strong>{{ comment.author.username }}</strong>
+            <span
+                class="reply-btn"
+                data-comment-id="{{ comment.id }}"
+                title="Reply"
+            >
+                &#8618;
+            </span>
+        </div>
+        {% if comment.author == request.user or comment.item.user == request.user %}
+        <button
+            type="button"
+            class="delete-comment-btn"
+            data-comment-id="{{ comment.id }}"
+            title="Delete comment"
+        >
+            Delete
+        </button>
+        {% endif %}
+    </div>
+
+    <span class="comment-text">{{ comment.comment }}
+        <div style="font-size: 8px">
+            {% load tz %}
+{{ comment.date_commented|timezone:"Asia/Kolkata" }}
+        </div>
+    </span>
+
+    <div class="reply-form-container"></div>
+
+    <div class="reply-container">
+
+        {% for reply in comment.replies.all %}
+
+            {% include "post/comment_tree.html" with comment=reply level=level|add:40 %}
+
+        {% endfor %}
+
+    </div>
+
+</div>

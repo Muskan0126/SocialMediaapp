@@ -1,0 +1,17 @@
+Django
+psycopg2-binary
+Pillow
+djangorestframework
+djangorestframework-simplejwt
+django-allauth
+python-dotenv
+requests
+drf-spectacular
+user_agents
+pytest
+boto3
+django-storages
+coverage
+pynguin
+stripe
+pre-commit
