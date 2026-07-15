@@ -17,7 +17,7 @@ class RequestLoggingMiddleware:
 
         duration = round(time.time() - start, 3)
 
-        username = "Anonymous"
+        username = request.user.username if request.user.is_authenticated else "Anonymous"
 
         if request.user.is_authenticated:
 
