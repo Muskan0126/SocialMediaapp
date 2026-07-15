@@ -1,7 +1,8 @@
-from pathlib import Path
-from datetime import timedelta
-from dotenv import load_dotenv
 import os
+from datetime import timedelta
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -38,7 +39,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.github",
     "allauth.socialaccount.providers.discord",
-    'allauth.socialaccount.providers.openid_connect',
+    "allauth.socialaccount.providers.openid_connect",
     "drf_spectacular",
     "storages",
 ]
@@ -56,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "apps.common.middleware.RequestLoggingMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -111,13 +113,11 @@ SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": [
             "email",
-            ],
-            "AUTH_PARAMS": {
+        ],
+        "AUTH_PARAMS": {
             "prompt": "select_account",
         },
-    
     },
-
     "github": {
         "SCOPE": [
             "user",
@@ -125,29 +125,26 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         "EMAIL_AUTHENTICATION": True,
     },
-
     "discord": {
         "SCOPE": [
             "identify",
             "email",
         ],
     },
-    'openid_connect': {
-        'APPS': [
+    "openid_connect": {
+        "APPS": [
             {
-                'provider_id': 'linkedin',    
-                'name': 'LinkedIn',             
-                'client_id': os.getenv("LINKEDIN_CLIENT_ID"),  
-                'secret': os.getenv("LINKEDIN_CLIENT_SECRET"), 
-                'settings': {
-                    'server_url': 'https://www.linkedin.com/oauth',
+                "provider_id": "linkedin",
+                "name": "LinkedIn",
+                "client_id": os.getenv("LINKEDIN_CLIENT_ID"),
+                "secret": os.getenv("LINKEDIN_CLIENT_SECRET"),
+                "settings": {
+                    "server_url": "https://www.linkedin.com/oauth",
                 },
             }
         ]
-    }
+    },
 }
-
-
 
 
 # =========================
@@ -222,10 +219,8 @@ MEDIA_URL = "/media/"
 # =========================
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -284,8 +279,47 @@ STORAGES = {
 }
 MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
 
-# Stripe 
+# Stripe
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
-STRIPE_WEBHOOK_SECRET= os.getenv("STRIPE_WEBHOOK_SECRET")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 STRIPE_PRICE_ID = os.getenv("STRIPE_PRICE_ID")
+
+# logging
+
+
+LOG_DIR = Path(BASE_DIR) / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+LOG_TYPES = ["app", "error", "security", "stripe"]
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {"format": "[{levelname}] {asctime} {name} : {message}", "style": "{"},
+        "detailed": {"format": "[{levelname}] {asctime} {module}:{lineno} {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "standard"},
+        **{
+            f"{name}_file": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": LOG_DIR / f"{name}.log",
+                "maxBytes": 5242880,
+                "backupCount": 5,
+                "formatter": "detailed",
+                **({"level": "ERROR"} if name == "error" else {}),
+            }
+            for name in LOG_TYPES
+        },
+    },
+    "loggers": {
+        name: {
+            "handlers": ["console", f"{name}_file"],
+            "level": "ERROR" if name == "error" else "INFO",
+            "propagate": False,
+        }
+        for name in LOG_TYPES
+    },
+}

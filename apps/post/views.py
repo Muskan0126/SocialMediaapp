@@ -1,50 +1,38 @@
-from django.conf import settings
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import (
-    render,
-    redirect,
-    get_object_or_404
-)
+import pdb
 
-from django.contrib.auth.decorators import login_required
+import stripe
+from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import authenticate, get_user_model, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
+from django.db.models import Case, IntegerField, When
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+
+from apps.common.logger import stripe_logger
 from apps.useraccount.forms import ForgotPasswordForm
 from apps.useraccount.models import Subscription
-from .models import (
-    Likes,
-    Post,
-    Story,
-    Follow,
-    Notification,
-    Comment,
-)
+
 from .forms import EditProfileForm, PostForm, StoryForm
-import pdb
-from django.contrib.auth import (
-    authenticate,
-    logout,
-)
-from django.db.models import Case, When, IntegerField
-from django.contrib.auth import get_user_model
-import stripe
-from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Comment, Follow, Likes, Notification, Post, Story
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 User = get_user_model()
 
-class home_view( LoginRequiredMixin ,View):
+
+class home_view(LoginRequiredMixin, View):
 
     def get(self, request):
-    
-        stories = Story.objects.select_related("user").annotate(
-            is_me=Case(
-                When(user=request.user, then=0),
-                default=1,
-                output_field=IntegerField()
-            )
-        ).order_by("is_me", "-created_at")
+
+        stories = (
+            Story.objects.select_related("user")
+            .annotate(is_me=Case(When(user=request.user, then=0), default=1, output_field=IntegerField()))
+            .order_by("is_me", "-created_at")
+        )
         posts = Post.objects.select_related("user").order_by("-posted", "-id")
         liked_posts = Likes.objects.filter(user=request.user).values_list("post_id", flat=True)
         following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
@@ -58,86 +46,50 @@ class home_view( LoginRequiredMixin ,View):
             "story_form": StoryForm(),
             "subscription": subscription,
         }
-        return render(
-            request,
-            "post/home.html",
-            context
-        )
+        return render(request, "post/home.html", context)
 
-class create_post_view( LoginRequiredMixin ,View):
-    def get (self,request):
+
+class create_post_view(LoginRequiredMixin, View):
+    def get(self, request):
         form = PostForm()
-        return render(
-            request,
-            "post/create_post.html",
-            {
-                "form": form
-            }
-        )
-    def post(self,request):
+        return render(request, "post/create_post.html", {"form": form})
+
+    def post(self, request):
         form = PostForm()
 
-        form = PostForm(
-            request.POST,
-            request.FILES
-        )
+        form = PostForm(request.POST, request.FILES)
 
         if form.is_valid():
 
             post = form.save(commit=False)
             post.user = request.user
             post.save()
-            
-            return redirect(
-                "home"
-            )
-        return render(
-            request,
-            "post/create_post.html",
-            {
-                "form": form
-            }
-        )
-class create_story_view( LoginRequiredMixin ,View):
-    
-    def get(self,request):
+
+            return redirect("home")
+        return render(request, "post/create_post.html", {"form": form})
+
+
+class create_story_view(LoginRequiredMixin, View):
+
+    def get(self, request):
         form = StoryForm()
-        return render(
-            request,
-            "post/create_story.html",
-            {
-                "form": form
-            }
-        )
+        return render(request, "post/create_story.html", {"form": form})
+
     def post(self, request):
 
-        form = StoryForm(
-            request.POST,
-            request.FILES
-        )
+        form = StoryForm(request.POST, request.FILES)
 
         if form.is_valid():
 
-            story = form.save(
-                commit=False
-            )
+            story = form.save(commit=False)
 
             story.user = request.user
 
             story.save()
 
-           
-            return redirect(
-                "home"
-            )
+            return redirect("home")
 
-        return render(
-            request,
-            "post/create_story.html",
-            {
-                "form": form
-            }
-        )
+        return render(request, "post/create_story.html", {"form": form})
 
 
 class delete_post_view(View):
@@ -162,136 +114,66 @@ class edit_caption_view(View):
         return JsonResponse({"success": True, "caption": post.caption})
 
 
-
 class delete_story_view(View):
-    def get(self,request,story_id):
-        story = get_object_or_404(
-            Story,
-            id=story_id,
-            user=request.user
-        )
+    def get(self, request, story_id):
+        story = get_object_or_404(Story, id=story_id, user=request.user)
 
         story.delete()
-
-       
 
         return redirect("home")
 
 
-class profile_view( LoginRequiredMixin ,View):
-    def get(self,request):
-        posts = (
-            Post.objects
-            .filter(user=request.user)
-            .select_related("user")
-            .order_by("-posted", "-id")
-        )
+class profile_view(LoginRequiredMixin, View):
+    def get(self, request):
+        posts = Post.objects.filter(user=request.user).select_related("user").order_by("-posted", "-id")
 
-        paginator = Paginator(
-            posts,
-            9
-        )
+        paginator = Paginator(posts, 9)
 
-        page_number = request.GET.get(
-            "page"
-        )
+        page_number = request.GET.get("page")
 
-        page_obj = paginator.get_page(
-            page_number
-        )
+        page_obj = paginator.get_page(page_number)
 
-        followers_count = (
-            Follow.objects.filter(
-                following=request.user
-            ).count()
-        )
+        followers_count = Follow.objects.filter(following=request.user).count()
 
-        following_count = (
-            Follow.objects.filter(
-                follower=request.user
-            ).count()
-        )
-        subscription = Subscription.objects.filter(
-            user=request.user
-        ).first()
+        following_count = Follow.objects.filter(follower=request.user).count()
+        subscription = Subscription.objects.filter(user=request.user).first()
         posts_count = posts.count()
 
         context = {
-
             "page_obj": page_obj,
-
-            "followers_count":
-                followers_count,
-
-            "following_count":
-                following_count,
-
-            "posts_count":
-                posts_count,
+            "followers_count": followers_count,
+            "following_count": following_count,
+            "posts_count": posts_count,
             "subscription": subscription,
         }
 
-        return render(
-            request,
-            "post/profile_view.html",
-            context
-        )
-        
-    
-class edit_profile( LoginRequiredMixin ,View):
-    def get(self,request):
-        form = EditProfileForm
-        form = EditProfileForm(
-            instance=request.user
-        )
-        return render(
-                request,
-                "post/edit_profile.html",
-                {
-                    "form": form
-                }
-            )
-    def post(self,request):
-        form = EditProfileForm
-        form = EditProfileForm(
-            instance=request.user
-        )
+        return render(request, "post/profile_view.html", context)
 
-        form = EditProfileForm(
-            request.POST,
-            request.FILES,
-            instance=request.user
-        )
+
+class edit_profile(LoginRequiredMixin, View):
+    def get(self, request):
+        form = EditProfileForm
+        form = EditProfileForm(instance=request.user)
+        return render(request, "post/edit_profile.html", {"form": form})
+
+    def post(self, request):
+        form = EditProfileForm
+        form = EditProfileForm(instance=request.user)
+
+        form = EditProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
-            return redirect(
-                "profile_view"
-            )
+            return redirect("profile_view")
 
-        return render(
-            request,
-            "post/edit_profile.html",
-            {
-                "form": form
-            }
-        )
+        return render(request, "post/edit_profile.html", {"form": form})
 
 
-class notifications_view( LoginRequiredMixin ,View):
-    def get(self,request):
-        notifications = Notification.objects.filter(
-            receiver=request.user
-        ).select_related("sender")
+class notifications_view(LoginRequiredMixin, View):
+    def get(self, request):
+        notifications = Notification.objects.filter(receiver=request.user).select_related("sender")
         notifications.update(is_read=True)
 
-        following_ids = (
-            Follow.objects
-            .filter(follower=request.user)
-            .values_list(
-                "following_id",
-                flat=True
-            )
-        )
+        following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
 
         return render(
             request,
@@ -299,14 +181,12 @@ class notifications_view( LoginRequiredMixin ,View):
             {
                 "notifications": notifications,
                 "following_ids": following_ids,
-            }
+            },
         )
-    
-
 
 
 class delete_account_view(View):
-    def post(self,request):
+    def post(self, request):
         if request.method == "POST":
             user = request.user
             logout(request)
@@ -316,16 +196,11 @@ class delete_account_view(View):
 
 
 class like_post(View):
-    def post(self,request,post_id):
+    def post(self, request, post_id):
 
-        post = Post.objects.get(
-            id=post_id
-        )
+        post = Post.objects.get(id=post_id)
 
-        like = Likes.objects.filter(
-            user=request.user,
-            post=post
-        )
+        like = Likes.objects.filter(user=request.user, post=post)
 
         if like.exists():
 
@@ -335,52 +210,46 @@ class like_post(View):
 
         else:
 
-            Likes.objects.create(
-                user=request.user,
-                post=post
-            )
+            Likes.objects.create(user=request.user, post=post)
 
             liked = True
 
-        return JsonResponse({
+        return JsonResponse({"liked": liked, "likes_count": post.post_likes.count()})
 
-            "liked": liked,
-
-            "likes_count":
-            post.post_likes.count()
-
-        })
 
 class add_comment(View):
-    def post(self,request, post_id):
-        
-            post = get_object_or_404(Post, id=post_id)
-            text = request.POST.get("comment", "").strip()
-            parent_id = request.POST.get("parent_id", "").strip()
-            if text:
-                import uuid
-                parent = None
-                if parent_id:
-                    try:
-                        parent = Comment.objects.get(id=parent_id, item=post)
-                    except Comment.DoesNotExist:
-                        pass
-                c = Comment.objects.create(
-                    id=str(uuid.uuid4())[:25],
-                    author=request.user,
-                    item=post,
-                    comment=text,
-                    parent=parent,
-                )
-                return JsonResponse({
+    def post(self, request, post_id):
+
+        post = get_object_or_404(Post, id=post_id)
+        text = request.POST.get("comment", "").strip()
+        parent_id = request.POST.get("parent_id", "").strip()
+        if text:
+            import uuid
+
+            parent = None
+            if parent_id:
+                try:
+                    parent = Comment.objects.get(id=parent_id, item=post)
+                except Comment.DoesNotExist:
+                    pass
+            c = Comment.objects.create(
+                id=str(uuid.uuid4())[:25],
+                author=request.user,
+                item=post,
+                comment=text,
+                parent=parent,
+            )
+            return JsonResponse(
+                {
                     "id": c.id,
                     "author": request.user.username,
                     "comment": text,
                     "parent_id": parent_id or None,
-                    "comment_count" : post.comments.count(),
-                    "date_commented" : c.date_commented,
-                })
-            return JsonResponse({"error": "invalid"}, status=400)
+                    "comment_count": post.comments.count(),
+                    "date_commented": c.date_commented,
+                }
+            )
+        return JsonResponse({"error": "invalid"}, status=400)
 
 
 class delete_comment_view(View):
@@ -396,16 +265,17 @@ class delete_comment_view(View):
 
         comment.delete()
 
-        return JsonResponse({
-            "success": True,
-            "post_id": post.id,
-            "comment_count": post.comments.count(),
-        })
-
+        return JsonResponse(
+            {
+                "success": True,
+                "post_id": post.id,
+                "comment_count": post.comments.count(),
+            }
+        )
 
 
 class follow_user(View):
-    def post(self,request, user_id):
+    def post(self, request, user_id):
         target = get_object_or_404(User, id=user_id)
 
         if target == request.user:
@@ -420,10 +290,13 @@ class follow_user(View):
             Follow.objects.create(follower=request.user, following=target)
             following = True
 
-        return JsonResponse({
-            "following": following,
-            "followers_count": Follow.objects.filter(following=target).count(),
-        })
+        return JsonResponse(
+            {
+                "following": following,
+                "followers_count": Follow.objects.filter(following=target).count(),
+            }
+        )
+
 
 class PremiumView(View):
 
@@ -432,10 +305,9 @@ class PremiumView(View):
         context = {
             "subscription": subscription,
         }
-        return render(
-            request,
-            "post/premium.html", context)
-        
+        return render(request, "post/premium.html", context)
+
+
 @csrf_exempt
 def stripe_webhook(request):
 
@@ -444,9 +316,7 @@ def stripe_webhook(request):
 
     try:
         event = stripe.Webhook.construct_event(
-            payload=payload,
-            sig_header=sig_header,
-            secret=settings.STRIPE_WEBHOOK_SECRET
+            payload=payload, sig_header=sig_header, secret=settings.STRIPE_WEBHOOK_SECRET
         )
 
     except ValueError:
@@ -458,30 +328,25 @@ def stripe_webhook(request):
     if event["type"] == "checkout.session.completed":
 
         session = event["data"]["object"]
-
-        print("Payment Successful")
+        stripe_logger.info("Payment Successful")
 
         metadata = session["metadata"]
-        print(metadata)
+        stripe_logger.info("metadata")
         user_id = metadata["user_id"]
-        print(user_id)
+        stripe_logger.info("user_id")
 
         if not user_id:
-            print("No user_id found in metadata")
+            stripe_logger.info("no user_id in metadata")
             return HttpResponse(status=200)
 
         try:
             user = User.objects.get(id=user_id)
 
-            subscription, created = Subscription.objects.get_or_create(
-    user=user
-)
+            subscription, created = Subscription.objects.get_or_create(user=user)
 
             # Idempotency check
             if subscription.stripe_session_id == session["id"]:
-
-                print("Webhook already processed.")
-
+                stripe_logger.info("Webhook already processed.")
                 return HttpResponse(status=200)
 
             subscription.is_premium = True
@@ -489,39 +354,28 @@ def stripe_webhook(request):
             subscription.stripe_session_id = session["id"]
 
             subscription.save()
-
-            print(f"Premium activated for {user.username}")
-
+            stripe_logger.info("premium activated for {user.username}")
         except User.DoesNotExist:
-            print("User not found")
+            stripe_logger.info("User does not exist")
 
     return HttpResponse(status=200)
+
+
 class CreateCheckoutSessionView(View):
 
     def post(self, request):
 
         session = stripe.checkout.Session.create(
-
             mode="payment",
-
             line_items=[
                 {
                     "price": settings.STRIPE_PRICE_ID,
                     "quantity": 1,
                 }
             ],
-
-            metadata={
-                "user_id": request.user.id
-            },
-
-            success_url=request.build_absolute_uri(
-    "/post/profile-view"
-),
-
-            cancel_url=request.build_absolute_uri(
-                "/post/premium/"
-            ),
+            metadata={"user_id": request.user.id},
+            success_url=request.build_absolute_uri("/post/profile-view"),
+            cancel_url=request.build_absolute_uri("/post/premium/"),
         )
 
         return redirect(session.url)
