@@ -1,0 +1,20 @@
+[Unit]
+Description=Gunicorn daemon for Instagram Project
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/SocialMediaapp
+
+Environment="DJANGO_SETTINGS_MODULE=instagram.settings.production"
+
+ExecStart=/home/ubuntu/SocialMediaapp/venv/bin/gunicorn \
+    --workers 3 \
+    --bind unix:/home/ubuntu/SocialMediaapp/gunicorn.sock \
+    instagram.wsgi:application
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
