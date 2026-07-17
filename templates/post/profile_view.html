@@ -19,7 +19,39 @@ width:80%;
 margin:auto;
 margin-top:40px;
 }
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+}
 
+.sidenav a {
+  padding: 20px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
 .profile-header{
 display:flex;
 align-items:flex-start;
@@ -140,13 +172,20 @@ white-space:normal;
 
 </head>
 <body>
-
+    {% include "includes/sidebar.html" %}
 <div class="container">
-    
+
     <div class="top-bar">
-    <a href="{% url 'home' %}" class="home-btn">🏠</a>
-</div>
-  
+
+        <span
+        style="font-size:30px;color:#c0358b;cursor:pointer"
+        onclick="openNav()">
+
+        &#9776; Instagram
+
+        </span>
+
+        </div>
 <div class="profile-header">
   {% if request.user.profile_photo %}
   <img
@@ -158,19 +197,19 @@ white-space:normal;
 
         <img
             src="https://via.placeholder.com/120"
-    
+
         >
 
     {% endif %}
 
-    
+
 <div class="profile-info">
 
 <h1>{{ request.user.username }}
     {% if subscription and subscription.is_premium %}
         <span
             style="
-                
+
             background:rgb(87, 166, 231);
             color:black;
             padding:1px 4px;
@@ -216,9 +255,9 @@ Edit Profile </a>
 <div class="bio">
 
   <p>{{ request.user.bio }}</p>
-  
-  
-  
+
+
+
   </div>
 </div>
 
@@ -235,18 +274,14 @@ onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
                 <dialog id="postPopup_{{ post.id }}" style="border:none; border-radius:8px; padding:20px; background:#111; color:white;">
                   <img src="{{ post.picture.url }}" alt="Post Image" style="max-width:800px; max-height:800px; height:auto; display:block;">
                   <br>
-                  
+
                   <div id="likes-count-{{ post.id }}">
                     {{ post.post_likes.count }}
                     Likes
 
-                    
+
                   </div>
-              
-                
-                
-                
-                
+
             <div>
             <strong>
             {{ post.user.username }}
@@ -280,11 +315,11 @@ onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
                     border-radius:8px;
                     background:#1a1a1a;
                 ">
-            
+
                 <p style="margin-bottom:15px;">
                     Are you sure you want to delete this post?
                 </p>
-            
+
                 <button
                     type="button"
                     onclick="document.getElementById('deleteConfirm{{ post.id }}').style.display='none'"
@@ -298,7 +333,7 @@ onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
                     ">
                     Cancel
                 </button>
-            
+
                 <button
     type="button"
     class="confirm-delete-btn"
@@ -315,13 +350,13 @@ onclick="document.getElementById('postPopup_{{ post.id }}').showModal()"
 >
     Delete
 </button>
-            
+
             </div>
-        
+
                   {% endif %}
-                 
+
                 </dialog>
-                
+
 {% endfor %}
 
 </div>
@@ -390,6 +425,15 @@ $(document).on("click", ".confirm-delete-btn", function(){
     });
 
 });
+function openNav() {
+  document.getElementById("mySidenav").style.width = "250px";
+
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+
+}
 
 </script>
 </body>
