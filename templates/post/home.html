@@ -1141,7 +1141,7 @@ $(document).ready(function(){
         }
     });
 
-$(".upload-open-btn").click(function(){
+$(document).on("click", ".upload-open-btn", function(){
     var targetId = $(this).data("upload-target");
     $("#" + targetId).addClass("open");
 });
@@ -1156,7 +1156,7 @@ $(".upload-overlay").click(function(e){
     }
 });
 
-$(".comment-open-btn").click(function(){
+$(document).on("click", ".comment-open-btn", function(){
     $("#" + $(this).data("comment-target")).addClass("open");
 });
 
@@ -1180,55 +1180,42 @@ window.escapeHtml = function(value){
     return $("<div>").text(value).html();
 };
 
-$(".like-btn").click(function(){
+$(document).on("click", ".like-btn", function(e){
+    e.preventDefault();
 
-    var button = $(this);
-
-    var post_id =
-        button.data("post-id");
+    var clickedButton = $(this);
+    var post_id = clickedButton.data("post-id");
 
     $.ajax({
-
-        url:
-        "/post/like/" +
-        post_id +
-        "/",
-
-        type:"POST",
-
-        headers:{
-
-            "X-CSRFToken":
-            "{{ csrf_token }}"
-
+        url: "/post/like/" + post_id + "/",
+        type: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
         },
+        success: function(response){
+            // 1. Find ALL buttons on the page with this specific post-id
+            var allMatchingButtons = $('.like-btn[data-post-id="' + post_id + '"]');
 
-        success:function(response){
-
+            // 2. Change the heart icon for ALL of them
             if(response.liked){
-
-                button.html("❤️");
-
+                allMatchingButtons.html("❤️");
+            } else {
+                allMatchingButtons.html("🤍");
             }
 
-            else{
-
-                button.html("🤍");
-
-            }
-
-            $("#likes-count-" + post_id)
-            .text(
-                response.likes_count
-            );
-
+            // 3. Update all matching like counts
+            $('[id="likes-count-' + post_id + '"]').text(response.likes_count);
+        },
+        error: function(xhr, status, error) {
+            console.error("AJAX Error: ", error);
         }
-
     });
-
 });
 
-$(".follow-btn").click(function(){
+
+
+
+$(document).on("click", ".follow-btn", function(){
     var btn = $(this);
     var user_id = btn.data("user-id");
 
@@ -1311,10 +1298,9 @@ $(document).on("submit", ".comment-form", function(e){
         '</div>'
 
     );
-    $("#comments-count-" + post_id)
-            .text(
-                response.comment_count
-            );
+    document.querySelectorAll('[id="comments-count-' + post_id + '"]').forEach(function(element) {
+    element.innerText = response.comment_count;
+});
 
     input.val("");
 
@@ -1451,10 +1437,9 @@ $(document).on(
 
         '</div>'
     );
-    $("#comments-count-" + post_id)
-            .text(
-                response.comment_count
-            );
+    document.querySelectorAll('[id="comments-count-' + post_id + '"]').forEach(function(element) {
+    element.innerText = response.comment_count;
+});
 
     form.remove();
 
@@ -1477,7 +1462,9 @@ $(document).on("click", ".delete-comment-btn", function(){
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
         success: function(response){
             commentItem.remove();
-            $("#comments-count-" + response.post_id).text(response.comment_count);
+            document.querySelectorAll('[id="comments-count-' + post_id + '"]').forEach(function(element) {
+    element.innerText = response.comment_count;
+});
 
             if (!commentsList.children(".comment-item").length) {
                 commentsList.html('<p class="comments-empty">No comments yet.</p>');
