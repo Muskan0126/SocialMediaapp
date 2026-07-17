@@ -1,0 +1,24 @@
+<div id="mySidenav" class="sidenav">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <a href="{% url 'home' %}"> &#127969 Home</a>
+    <a href="{% url 'notifications' %}">&#8506 Notifications</a>
+    <a href="{% url 'logout' %}">&#10149 Signout</a>
+    <a href="{% url 'profile_view' %}"> &#9787 Profile</a>
+    <a href="{% url 'premium' %}" class="a">⭐ Premium</a>
+      <a href="{% url 'forgot_password' %}"> &#9998 Reset Password </a>
+
+      <button
+      type="button"
+      id="openDeleteAccountModal"
+      style="
+          background:none;
+          border:none;
+          color:red;
+          cursor:pointer;
+          font-size:16px;
+          width:100%;
+          margin-top:75%;
+      ">
+      Delete Account
+  </button>
+  </div>

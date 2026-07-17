@@ -132,13 +132,16 @@ body {
 }
 
 .home-topbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-flex-wrap:wrap;
-gap:12px;
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:#111;
+    padding:15px 0;
 }
 
+.sidenav{
+    z-index:1000;
+}
 .home-actions{
 display:flex;
 gap:10px;
@@ -651,30 +654,7 @@ height:50px;
 </head>
 <body>
 
-<div id="mySidenav" class="sidenav">
-  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-  <a href="{% url 'home' %}"> Home</a>
-  <a href="{% url 'notifications' %}">&#8506 Notifications</a>
-  <a href="{% url 'logout' %}">&#10149 Signout</a>
-  <a href="{% url 'profile_view' %}"> &#9787 Profile</a>
-  <a href="{% url 'premium' %}" class="a">⭐ Premium</a>
-    <a href="{% url 'forgot_password' %}"> &#9998 Reset Password </a>
-
-    <button
-    type="button"
-    id="openDeleteAccountModal"
-    style="
-        background:none;
-        border:none;
-        color:red;
-        cursor:pointer;
-        font-size:16px;
-        width:100%;
-        margin-top:75%;
-    ">
-    Delete Account
-</button>
-</div>
+  {% include "includes/sidebar.html" %}
 </div>
 
 <div id="main">
@@ -1504,13 +1484,17 @@ function closeNav() {
 
 // 3-dot menu toggle
 $(document).on("click", ".three-dot-btn", function(e){
-    e.stopPropagation();
-    var postId = $(this).data("post-id");
-    $(".post-menu").not("#post-menu-" + postId).hide();
-    $("#post-menu-" + postId).toggle();
-});
-$(document).on("click", function(){ $(".post-menu").hide(); });
 
+e.stopPropagation();
+
+$(".post-menu").hide();
+
+$(this).siblings(".post-menu").toggle();
+
+});
+$(document).on("click", function(){
+    $(".post-menu").hide();
+});
 // Delete post
 var deletePostId = null;
 $(document).on("click", ".delete-post-btn", function(e){
