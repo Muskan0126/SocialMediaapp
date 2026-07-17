@@ -4,17 +4,62 @@
 <title>Notifications</title>
 <style>
 body { background: #111; color: white; font-family: Arial, sans-serif; }
-.container { width: 50%; margin: 40px auto; }
-.item { padding: 14px; border-bottom: 1px solid #222; font-size: 15px; }
+.container { padding-left: 150px; width: 50%; margin: 40px ; }
+.item { padding-left: 350px; border-bottom: 1px solid #222; font-size: 20px; }
 .empty { color: #555; margin-top: 40px; }
 a { color: #aaa; text-decoration: none; }
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+}
+
+.sidenav a {
+  padding: 20px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
 </style>
 </head>
 <body>
-<div class="container">
-    <p><a href="{% url 'home' %}">← Home</a></p>
-    <h2>Notifications</h2>
-
+    <div style="padding:20px;">
+        <span
+            onclick="openNav()"
+            style="
+                font-size:30px;
+                cursor:pointer;
+                color:#e1306c;
+            ">
+            &#9776; Instagram
+        </span>
+    </div>
+    {% include "includes/sidebar.html" %}
+    <div class="container"></div>
+    <div style="padding-left: 350px;">
+        <h2>Notifications</h2>
+    </div>
     {% for n in notifications %}
         <div class="item">{{ n.notification_text }}
             <div style="font-size: 10px">
@@ -22,9 +67,8 @@ a { color: #aaa; text-decoration: none; }
                 {{n.date_created|timezone:"Asia/Kolkata"}}
             </div>
         </div>
-        
-        <div style="display:flex; gap:10px; align-items:center;">
-            
+
+        <div style="display:flex; gap:10px; padding-left: 350px;   align-items:center;">
             <button
                 class="follow-btn"
                 data-user-id="{{ n.sender.id }}"
@@ -39,19 +83,22 @@ a { color: #aaa; text-decoration: none; }
                 ">
                 {% if n.sender.id in following_ids %}Unfollow{% else %}Follow{% endif %}
             </button>
-            
-            
-          
         </div>
- 
-       
-        
     {% empty %}
         <p class="empty">No notifications yet.</p>
     {% endfor %}
 </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
+    function openNav() {
+  document.getElementById("mySidenav").style.width = "300px";
+
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+
+}
     $(".follow-btn").click(function(){
     var btn = $(this);
     var user_id = btn.data("user-id");
@@ -75,11 +122,13 @@ a { color: #aaa; text-decoration: none; }
                     "background": "#e1306c",
                     "color": "white",
                     "border": "1px solid #e1306c"
+
                 });
             }
         }
     });
 });
+
 </script>
 </body>
 </html>

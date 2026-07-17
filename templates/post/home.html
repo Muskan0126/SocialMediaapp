@@ -132,13 +132,16 @@ body {
 }
 
 .home-topbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-flex-wrap:wrap;
-gap:12px;
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:#111;
+    padding:15px 0;
 }
 
+.sidenav{
+    z-index:1000;
+}
 .home-actions{
 display:flex;
 gap:10px;
@@ -161,10 +164,10 @@ flex-wrap:wrap;
 }
 
 .circle-pic {
-  width: 70px;          
-  height: 70px;         
-  border-radius: 50%;    
-  object-fit: cover;     
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .container{
@@ -495,8 +498,8 @@ white-space:normal;
     margin-left: 4rem;
 }
 .bottom-links {
-   
-    margin-top: auto; 
+
+    margin-top: auto;
     display: flex;
     flex-direction: column;
     padding-bottom: 20px;
@@ -651,30 +654,7 @@ height:50px;
 </head>
 <body>
 
-<div id="mySidenav" class="sidenav">
-  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-  <a href="{% url 'home' %}"> Home</a>
-  <a href="{% url 'notifications' %}">&#8506 Notifications</a>
-  <a href="{% url 'logout' %}">&#10149 Signout</a>
-  <a href="{% url 'profile_view' %}"> &#9787 Profile</a>
-  <a href="{% url 'premium' %}" class="a">⭐ Premium</a>
-    <a href="{% url 'forgot_password' %}"> &#9998 Reset Password </a> 
-    
-    <button
-    type="button"
-    id="openDeleteAccountModal"
-    style="
-        background:none;
-        border:none;
-        color:red;
-        cursor:pointer;
-        font-size:16px;
-        width:100%;
-        margin-top:75%;
-    ">
-    Delete Account
-</button>
-</div>
+  {% include "includes/sidebar.html" %}
 </div>
 
 <div id="main">
@@ -689,7 +669,7 @@ height:50px;
         </button>
       </div>
     </div>
-    
+
     <div class="container">
 
         <div class="stories">
@@ -713,14 +693,14 @@ height:50px;
             {% if story.user.profile_photo %}
             <img
                 src="{{ story.user.profile_photo.url }}"
-                
+
                 onclick="$('#storyPopup_{{ story.id }}').addClass('open')"
                 style="cursor:pointer;"
             >
             {% else %}
             <img
                 src="https://via.placeholder.com/70"
-                
+
                 onclick="$('#storyPopup_{{ story.id }}').addClass('open')"
                 style="cursor:pointer;"
             >
@@ -748,9 +728,9 @@ height:50px;
             <button
                 type="button"
                 class="modal-btn modal-btn-cancel story-close-btn">
-                
+
                 <a href="{% url 'home' %}" style=" font : white"> Close </a>
-                
+
             </button>
 
             {% if story.user == request.user %}
@@ -767,7 +747,7 @@ height:50px;
     </div>
 
 </div>
-          
+
 
           <p>{{ story.user.username }}</p>
         </div>
@@ -776,9 +756,9 @@ height:50px;
         </div>
         <div id="posts-container">
         {% for post in posts %}
-        
+
         <div class="post" data-post-id="{{ post.id }}">
-        
+
         <div class="post-header">
 
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -789,7 +769,7 @@ height:50px;
             {% else %}
             <img src="https://placehold.co/600x400" style="opacity:1; background-color: #f1f1f1;">
             {% endif %}
-          
+
           <span>{{ post.user.username }}
             {% if post.user.subscription.is_premium %}
             <span
@@ -801,18 +781,18 @@ height:50px;
               &#10004
               </span>
           {% endif %}
-            
-    
+
+
             <div style="font-size: 10px">
                 {% load tz %}
 {{ post.updated_at|timezone:"Asia/Kolkata" }}
             </div>
           </span>
-         
+
         </div>
           <div style="display:flex; gap:10px; align-items:center;">
             {% if post.user != request.user %}
-          
+
             <button
                 class="follow-btn"
                 data-user-id="{{ post.user.id }}"
@@ -829,7 +809,7 @@ height:50px;
             </button>
             {% endif %}
             {% if post.user == request.user %}
-           
+
             <div style="position:relative;">
               <button class="three-dot-btn" data-post-id="{{ post.id }}"
                 style="background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;">&#8942;</button>
@@ -851,17 +831,17 @@ height:50px;
             {% endif %}
           </div>
         </div>
- 
+
         </div>
-        
+
         <img
         class="post-image"
         src="{{ post.picture.url }}"
-        
+
         >
-        
+
         <div class="post-content">
-        
+
           <div class="post-actions">
 
             <span
@@ -872,19 +852,19 @@ height:50px;
                 font-size:30px;
                 "
             >
-        
+
             {% if post.id in likes %}
                 ❤️
             {% else %}
                 🤍
             {% endif %}
-        
+
             </span>
-        
+
             <span id="likes-count-{{ post.id }}">
                 {{ post.post_likes.count }}
             </span>
-        
+
             <span>Likes</span>
 
             <button type="button" class="comment-open-btn" data-comment-target="comment-box-{{ post.id }}">
@@ -922,7 +902,7 @@ height:50px;
     {% if not post.comments.all %}
       <p class="comments-empty">No comments yet.</p>
     {% endif %}
-    
+
             </div>
             <form class="comment-form" data-post-id="{{ post.id }}">
               {% csrf_token %}
@@ -936,13 +916,13 @@ height:50px;
             </form>
           </div>
         </div>
-      
-        </div> 
-        
+
+        </div>
+
         {% endfor %}
         </div>
-        </div> 
-        </div> 
+        </div>
+        </div>
 
 
 <div class="custom-overlay upload-overlay" id="postUploadOverlay">
@@ -973,7 +953,7 @@ height:50px;
     </form>
   </div>
 </div>
-        
+
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -1139,11 +1119,11 @@ setTimeout(() => {
 
 $(document).ready(function(){
 
-  
+
     $(".caption-text").each(function(){
         var $span = $(this);
         var $btn = $span.siblings(".caption-toggle");
-     
+
         if (this.scrollHeight > this.clientHeight + 2) {
             $btn.show();
         }
@@ -1292,17 +1272,17 @@ $(document).on("submit", ".comment-form", function(e){
         data: { comment: text },
         success: function(response){
           let dateObj = new Date(response.date_commented);
-        
+
         let formattedDate = new Intl.DateTimeFormat('en-IN', {
-            year: 'numeric', 
-            month: 'short', 
+            year: 'numeric',
+            month: 'short',
             day: 'numeric',
-            hour: '2-digit', 
+            hour: '2-digit',
             minute: '2-digit'
         }).format(dateObj);
 
     $("#comments-list-" + post_id + " .comments-empty").remove();
-            
+
     $("#comments-list-" + post_id).append(
 
         '<div class="comment-item" data-comment-id="' + response.id + '">' +
@@ -1321,7 +1301,7 @@ $(document).on("submit", ".comment-form", function(e){
 
         '</div>' +
 
-        '<span class="comment-text">' + escapeHtml(response.comment) + '</span>' + '' +  
+        '<span class="comment-text">' + escapeHtml(response.comment) + '</span>' + '' +
         '<div style = "font-size: 8px">' + formattedDate + '</div>' +
 
         '<div class="reply-form-container"></div>' +
@@ -1329,7 +1309,7 @@ $(document).on("submit", ".comment-form", function(e){
         '<div class="reply-container"></div>' +
 
         '</div>'
-        
+
     );
     $("#comments-count-" + post_id)
             .text(
@@ -1430,12 +1410,12 @@ $(document).on(
 
             success:function(response){
               let dateObj = new Date(response.date_commented);
-        
+
         let formattedDate = new Intl.DateTimeFormat('en-IN', {
-            year: 'numeric', 
-            month: 'short', 
+            year: 'numeric',
+            month: 'short',
             day: 'numeric',
-            hour: '2-digit', 
+            hour: '2-digit',
             minute: '2-digit'
         }).format(dateObj);
 
@@ -1457,7 +1437,7 @@ $(document).on(
 
             '<span class="reply-btn" data-comment-id="' + response.id + '" title="Reply">&#8618;</span>' +
 
-            '</div>' + 
+            '</div>' +
 
             '<button type="button" class="delete-comment-btn" data-comment-id="' + response.id + '" title="Delete comment">Delete</button>' +
 
@@ -1469,7 +1449,7 @@ $(document).on(
 
             '<div class="reply-container"></div>' +
 
-        '</div>'      
+        '</div>'
     );
     $("#comments-count-" + post_id)
             .text(
@@ -1477,7 +1457,7 @@ $(document).on(
             );
 
     form.remove();
-   
+
 }
 
         });
@@ -1507,23 +1487,27 @@ $(document).on("click", ".delete-comment-btn", function(){
 });
 function openNav() {
   document.getElementById("mySidenav").style.width = "250px";
-  
+
 }
 
 function closeNav() {
   document.getElementById("mySidenav").style.width = "0";
-  
+
 }
 
 // 3-dot menu toggle
 $(document).on("click", ".three-dot-btn", function(e){
-    e.stopPropagation();
-    var postId = $(this).data("post-id");
-    $(".post-menu").not("#post-menu-" + postId).hide();
-    $("#post-menu-" + postId).toggle();
-});
-$(document).on("click", function(){ $(".post-menu").hide(); });
 
+e.stopPropagation();
+
+$(".post-menu").hide();
+
+$(this).siblings(".post-menu").toggle();
+
+});
+$(document).on("click", function(){
+    $(".post-menu").hide();
+});
 // Delete post
 var deletePostId = null;
 $(document).on("click", ".delete-post-btn", function(e){
@@ -1617,6 +1601,6 @@ $("#deleteAccountOverlay").click(function(e){
     }
 });
 </script>
-   
+
 </body>
 </html>
