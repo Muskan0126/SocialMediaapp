@@ -13,9 +13,18 @@ from .forms import ForgotPasswordForm, LoginForm, ResetPasswordForm, SignupForm
 from .models import otp
 
 User = get_user_model()
+"""This file contains all the views for the useraccount app
+The views are class based views and function based views
+The views are used to render the templates and handle the requests
+The views are used to handle the signup, login, logout, forgot password, reset password, home, and other user account related functionalities
+"""
 
 
 class signup_view(View):
+    """This contains the signup feature of the user information
+    Allowed to create a new user account and also handle the signup form validation
+    """
+
     app_logger.info("Signup form opened")
 
     def get(self, request):
@@ -41,6 +50,10 @@ class signup_view(View):
 
 
 class login_view(View):
+    """This contains the login feature of the user information
+    Allowed to login to the user account and also handle the login form validation.
+    also handle the authentication of the user and redirect to the home page if successful"""
+
     def get(self, request):
 
         form = LoginForm()
@@ -75,6 +88,10 @@ def logout_view(request):
 
 
 class forgot_password_view(View):
+    """This contains the forgot password feature of the user information.
+    Allowed to reset the password of the user account and also handle the forgot password form validation.
+    also handle the sending of the OTP to the user's email and redirect to the reset password page"""
+
     def get(self, request):
         form = ForgotPasswordForm()
         return render(request, "useraccount/forgot_password.html", {"form": form})
@@ -126,6 +143,10 @@ class forgot_password_view(View):
 
 
 class reset_password_view(View):
+    """This contains the reset password feature of the user information
+    Allowed to reset the password of the user account and also handle the reset password form validation.
+    also handle the verification of the OTP and redirect to the login page if successful"""
+
     def get(self, request):
         form = ResetPasswordForm()
         return render(request, "useraccount/reset_password.html", {"form": form})
