@@ -1,4 +1,5 @@
 import pdb
+import uuid
 
 import stripe
 from django.conf import settings
@@ -23,8 +24,16 @@ from .models import Comment, Follow, Likes, Notification, Post, Story
 stripe.api_key = settings.STRIPE_SECRET_KEY
 User = get_user_model()
 
+"""this file contains all the views for the post app
+the views are class based views and function based views
+the views are used to render the templates and handle the requests
+the views are used to handle the post, story, comment, like, follow, notification, profile, edit profile, delete account, premium, stripe webhook, stripe checkout session
+"""
+
 
 class home_view(LoginRequiredMixin, View):
+    """Displays the home feed
+    Fetches the newly added post at the top  along with follow and other context data"""
 
     def get(self, request):
 
@@ -50,6 +59,9 @@ class home_view(LoginRequiredMixin, View):
 
 
 class create_post_view(LoginRequiredMixin, View):
+    """Render the post creation form
+    saves the image type files along with captian"""
+
     def get(self, request):
         form = PostForm()
         return render(request, "post/create_post.html", {"form": form})
@@ -70,6 +82,8 @@ class create_post_view(LoginRequiredMixin, View):
 
 
 class create_story_view(LoginRequiredMixin, View):
+    """Render the story creation form
+    saves the image type files along with captian"""
 
     def get(self, request):
         form = StoryForm()
@@ -102,6 +116,9 @@ class delete_post_view(View):
 
 
 class edit_caption_view(View):
+    """On post action to edit post
+    contains edit fun"""
+
     def post(self, request, post_id):
         if not request.user.is_authenticated:
             return JsonResponse({"error": "not authenticated"}, status=401)
@@ -124,6 +141,10 @@ class delete_story_view(View):
 
 
 class profile_view(LoginRequiredMixin, View):
+    """Contains the Profile page
+    renders the user profile , edit profile and user posts.
+    user posts are paginated by 9 posts per page"""
+
     def get(self, request):
         posts = Post.objects.filter(user=request.user).select_related("user").order_by("-posted", "-id")
 
@@ -151,6 +172,9 @@ class profile_view(LoginRequiredMixin, View):
 
 
 class edit_profile(LoginRequiredMixin, View):
+    """This contains the edit feature of the user information
+    Allowed to change or add phone number, profile picture, gender, first name, last name, email"""
+
     def get(self, request):
         form = EditProfileForm
         form = EditProfileForm(instance=request.user)
@@ -169,6 +193,9 @@ class edit_profile(LoginRequiredMixin, View):
 
 
 class notifications_view(LoginRequiredMixin, View):
+    """Contains the post follow notification.
+    As the user starts folowing a notification using signals is triggered"""
+
     def get(self, request):
         notifications = Notification.objects.filter(receiver=request.user).select_related("sender")
         notifications.update(is_read=True)
@@ -196,6 +223,9 @@ class delete_account_view(View):
 
 
 class like_post(View):
+    """This contains the like feature of the user information
+    Allowed to like and unlike the post"""
+
     def post(self, request, post_id):
 
         post = Post.objects.get(id=post_id)
@@ -218,14 +248,15 @@ class like_post(View):
 
 
 class add_comment(View):
+    """This contains the comment feature of the user information
+    Allowed to add comment to the post and also reply to the comment"""
+
     def post(self, request, post_id):
 
         post = get_object_or_404(Post, id=post_id)
         text = request.POST.get("comment", "").strip()
         parent_id = request.POST.get("parent_id", "").strip()
         if text:
-            import uuid
-
             parent = None
             if parent_id:
                 try:
@@ -253,6 +284,9 @@ class add_comment(View):
 
 
 class delete_comment_view(View):
+    """This contains the delete comment feature of the user information
+    Allowed to delete comment to the post and also reply to the comment"""
+
     def post(self, request, comment_id):
         if not request.user.is_authenticated:
             return JsonResponse({"error": "not authenticated"}, status=401)
@@ -275,6 +309,10 @@ class delete_comment_view(View):
 
 
 class follow_user(View):
+    """This contains the follow feature of the user information
+    Allowed to follow and unfollow the user
+    here the follow model is used to create a relationship between the user and the user being followed"""
+
     def post(self, request, user_id):
         target = get_object_or_404(User, id=user_id)
 
@@ -299,6 +337,8 @@ class follow_user(View):
 
 
 class PremiumView(View):
+    """This contains the premium feature of the user information
+    Allowed to view the premium page and also check if the user is premium or not"""
 
     def get(self, request):
         subscription = Subscription.objects.filter(user=request.user).first()
@@ -310,7 +350,8 @@ class PremiumView(View):
 
 @csrf_exempt
 def stripe_webhook(request):
-
+    """This contains the stripe webhook feature of the user information
+    Allowed to handle the stripe webhook events and also check if the user is premium or not"""
     payload = request.body
     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
 
@@ -362,6 +403,9 @@ def stripe_webhook(request):
 
 
 class CreateCheckoutSessionView(View):
+    """This contains the stripe checkout session feature of the user information
+    Allowed to create a stripe checkout session and also check if the user is premium or not
+    also redirect to the stripe checkout page"""
 
     def post(self, request):
 
