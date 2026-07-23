@@ -1,8 +1,9 @@
 import random
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 from django.views import View
@@ -142,14 +143,34 @@ class forgot_password_view(View):
         return render(request, "useraccount/forgot_password.html", {"form": form})
 
 
-class reset_password_view(View):
-    """This contains the reset password feature of the user information
-    Allowed to reset the password of the user account and also handle the reset password form validation.
-    also handle the verification of the OTP and redirect to the login page if successful"""
+class reset_password_view(LoginRequiredMixin, View):
 
     def get(self, request):
+
+        user = request.user
+
+        # Delete any old OTPs
+        otp.objects.filter(email=user).delete()
+
+        generated_otp = random.randint(100000, 999999)
+
+        otp.objects.create(email=user, otp=str(generated_otp))
+
+        send_mail(
+            subject="Reset Password OTP",
+            message=f"Your OTP is {generated_otp}",
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
         form = ResetPasswordForm()
-        return render(request, "useraccount/reset_password.html", {"form": form})
+
+        return render(
+            request,
+            "useraccount/reset_password.html",
+            {"form": form},
+        )
 
     def post(self, request):
 
@@ -158,50 +179,44 @@ class reset_password_view(View):
         if form.is_valid():
 
             otp_text = form.cleaned_data["otp"]
-
             new_password = form.cleaned_data["new_password"]
 
-            email = request.session.get("reset_email")
-
-            if not email:
-
-                messages.error(request, "Session expired. Try again.")
-
-                return redirect("forgot_password")
+            user = request.user
+            email = user.email
 
             try:
-
                 otp_record = otp.objects.get(email__email=email, otp=otp_text)
 
             except otp.DoesNotExist:
-
                 messages.error(request, "Invalid OTP.")
-
-                return render(request, "useraccount/reset_password.html", {"form": form})
+                return render(
+                    request,
+                    "useraccount/reset_password.html",
+                    {"form": form},
+                )
 
             if otp_record.is_expired():
-
                 otp_record.delete()
-
                 messages.error(request, "OTP has expired.")
-
-                return redirect("forgot_password")
-
-            user = User.objects.get(email=email)
+                return render(
+                    request,
+                    "useraccount/reset_password.html",
+                    {"form": form},
+                )
 
             user.set_password(new_password)
-
             user.save()
 
             otp_record.delete()
 
-            request.session.pop("reset_email", None)
-
             messages.success(request, "Password reset successfully.")
+            return redirect("profile_view")
 
-            return redirect("login")
-
-        return render(request, "useraccount/reset_password.html", {"form": form})
+        return render(
+            request,
+            "useraccount/reset_password.html",
+            {"form": form},
+        )
 
 
 class home_view(View):
