@@ -1106,7 +1106,7 @@ setTimeout(() => {
         "beforeend",
         originalPosts
     );
-
+    initializeCaptions();
     isLoading = false;
 
 }, 500);
@@ -1120,14 +1120,7 @@ setTimeout(() => {
 $(document).ready(function(){
 
 
-    $(".caption-text").each(function(){
-        var $span = $(this);
-        var $btn = $span.siblings(".caption-toggle");
-
-        if (this.scrollHeight > this.clientHeight + 2) {
-            $btn.show();
-        }
-    });
+  initializeCaptions();
 
     $(document).on("click", ".caption-toggle", function(){
         var $btn = $(this);
@@ -1587,6 +1580,28 @@ $("#deleteAccountOverlay").click(function(e){
         $(this).removeClass("open");
     }
 });
+function initializeCaptions() {
+
+$(".caption-text").each(function(){
+
+    var $span = $(this);
+    var $btn = $span.siblings(".caption-toggle");
+
+    if ($span.data("initialized")) {
+        return;
+    }
+
+    $span.data("initialized", true);
+
+    if (this.scrollHeight > this.clientHeight + 2) {
+        $btn.show();
+    } else {
+        $btn.hide();
+    }
+
+});
+
+}
 </script>
 
 </body>
