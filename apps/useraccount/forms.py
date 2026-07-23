@@ -1,19 +1,20 @@
+import re
+
 from django import forms
 from django.contrib.auth import get_user_model
-import re
+
 User = get_user_model()
 
 GENDER_CHOICES = [
-    ('M', 'Male'),
-    ('F', 'Female'),
-    ('O', 'Other'),
+    ("M", "Male"),
+    ("F", "Female"),
+    ("O", "Other"),
 ]
+
 
 class SignupForm(forms.ModelForm):
 
-    password = forms.CharField(
-        widget=forms.PasswordInput()
-    )
+    password = forms.CharField(widget=forms.PasswordInput())
     phone_no = forms.CharField(max_length=10, min_length=10)
     gender = forms.ChoiceField(choices=GENDER_CHOICES)
 
@@ -29,9 +30,9 @@ class SignupForm(forms.ModelForm):
 
     def clean_username(self):
         username = self.cleaned_data.get("username")
-        if not re.match(r'^[a-z][a-z0-9_.]*$',username):
-            raise forms.ValidationError("Capital letters not allowed.")
-        if username and (username[0].isdigit() or username[0] in ('@', '/', '-', '+')):
+        if not re.match(r"^[a-z][a-z0-9_.]*$", username):
+            raise forms.ValidationError("Capital letters, spaces and special characters not allowed.")
+        if username and (username[0].isdigit() or username[0] in ("@", "/", "-", "+")):
             raise forms.ValidationError("Username must start with a letter.")
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError("Username already exists.")
@@ -46,9 +47,7 @@ class SignupForm(forms.ModelForm):
     def clean_password(self):
         password = self.cleaned_data.get("password")
         if password and (password.isdigit() or len(password) < 8):
-            raise forms.ValidationError(
-                "Password must be at least 8 characters and contain letters and numbers."
-            )
+            raise forms.ValidationError("Password must be at least 8 characters and contain letters and numbers.")
         return password
 
     def clean_phone_no(self):
@@ -60,11 +59,9 @@ class SignupForm(forms.ModelForm):
 
 class LoginForm(forms.Form):
 
-    username = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Enter your user name'}))
+    username = forms.CharField(widget=forms.TextInput(attrs={"placeholder": "Enter your user name"}))
 
-    password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': 'Enter your password'})
-    )
+    password = forms.CharField(widget=forms.PasswordInput(attrs={"placeholder": "Enter your password"}))
 
 
 class ForgotPasswordForm(forms.Form):
@@ -76,6 +73,4 @@ class ResetPasswordForm(forms.Form):
 
     otp = forms.CharField(max_length=6)
 
-    new_password = forms.CharField(
-        widget=forms.PasswordInput()
-    )
+    new_password = forms.CharField(widget=forms.PasswordInput())
